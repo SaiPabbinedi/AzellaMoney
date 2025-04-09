@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #8cde7c;
+            --secondary-color: #a3b1ff;
+            --dark-color: #212121;
+            --light-color: #f8fff0;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Profit Chart specific adjustments for layout */
+        .profit-chart {
+            background-color: var(--dark-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            color: white;
+            position: relative;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 320px; /* Ensure enough height */
+        }
+
+        .line-chart {
+            height: 140px; /* Explicit height for graph */
+            position: relative;
+            margin-bottom: 10px;
+            flex-grow: 1; /* Allow chart SVG to take space */
+        }
+        .line-chart svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .chart-summary {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            margin-top: 20px; /* Space above summary */
+            padding: 0 10px;
+        }
+
+        .month-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 15px; /* Space above labels */
+            padding: 0 5px;
+        }
+        /* End Profit Chart adjustments */
+
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* Prevent whole page scroll */
+            background-color: #333; /* Fallback background */
+            color: #212121; /* Default text color */
+        }
+
+        .dashboard-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0; /* Container takes full viewport */
+            display: flex;
+            flex-direction: column;
+            background-color: var(--light-color);
+            overflow: hidden; /* Important: Content scrolls inside, not the container */
+        }
+
+        .header {
+            display: flex;
+            justify-content: flex-start; /* Align title left */
+            align-items: center;
+            padding: 15px 20px;
+            background-color: white; /* Header background */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10; /* Ensure header is above content */
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Tooltip styles (kept for potential future use) */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 120px; background-color: var(--dark-color); color: #fff;
+            text-align: center; border-radius: 6px; padding: 5px 8px; position: absolute;
+            z-index: 1; bottom: 130%; left: 50%; margin-left: -60px; opacity: 0;
+            transition: opacity 0.3s; font-size: 12px;
+        }
+        .tooltip .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: var(--dark-color) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        /* End Tooltip styles */
+
+        .dashboard-content {
+            flex: 1; /* Takes remaining vertical space */
+            overflow-y: auto; /* Enables vertical scrolling ONLY for this area */
+            padding: 20px;
+            padding-bottom: 90px; /* ADDED: Space for the bottom navigation bar */
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column layout */
+            gap: 20px;
+            height: auto; /* Height determined by content */
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-filter {
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .view-report {
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: white;
+            transition: background-color 0.2s;
+        }
+
+        .view-report:hover {
+            background-color: #f5f5f5;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        /* Profit Chart Styles (already defined above, ensure consistency) */
+        .profit-chart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .profit-indicator {
+            color: var(--primary-color); font-size: 12px; background: rgba(140, 222, 124, 0.2);
+            padding: 4px 8px; border-radius: 10px;
+        }
+        .profit-amount {
+            font-size: 38px; font-weight: bold; color: var(--primary-color); margin-bottom: 5px;
+        }
+        .profit-label {
+            font-size: 14px; color: #aaa; margin-bottom: 15px;
+        }
+        .summary-amount {
+            font-size: 18px; font-weight: bold; margin-bottom: 5px; color: white; text-align: center;
+        }
+        .summary-label {
+            font-size: 12px; color: #aaa; text-align: center;
+        }
+        /* End Profit Chart Styles */
+
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto; /* Allow horizontal scroll for table if needed */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left; padding: 10px; border-bottom: 1px solid #ddd;
+            font-weight: normal; color: #666;
+        }
+
+        td {
+            padding: 10px; border-bottom: 1px solid #eee;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fiscal-year {
+            display: flex; justify-content: space-between; margin-bottom: 15px;
+            font-size: 14px; color: #666;
+        }
+        .fiscal-year div:last-child { font-weight: bold; color: #333; }
+
+
+        /* Debt list and favorite stocks styles */
+        .debt-item, .stock-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #eee; transition: background-color 0.2s;
+        }
+        .debt-item:hover, .stock-item:hover { background-color: #f9f9f9; }
+        .debt-item:last-child, .stock-item:last-child { border-bottom: none; }
+        .debt-details, .stock-details { display: flex; flex-direction: column; gap: 2px; }
+        .debt-name, .stock-name { font-weight: bold; font-size: 14px; }
+        .debt-amount, .stock-price { font-size: 16px; font-weight: bold; text-align: right; }
+        .debt-date, .stock-change { font-size: 12px; color: #666; text-align: right; } /* Align right */
+        .positive-change { color: green; }
+        .negative-change { color: red; }
+        /* End list styles */
+
+
+        .empty-state { text-align: center; padding: 20px; color: #999; }
+        .empty-state-icon { font-size: 30px; margin-bottom: 10px; opacity: 0.5; }
+
+
+        .add-button {
+            display: block; text-align: center; padding: 10px; background-color: #f5f5f5;
+            border-radius: var(--border-radius); margin-top: 10px; cursor: pointer;
+            color: #333; font-weight: bold; font-size: 14px; transition: background-color 0.2s;
+        }
+        .add-button:hover { background-color: #e0e0e0; }
+
+
+        .multi-column { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+
+        /* List container scrollbars */
+        #debt-list-container, #stocks-list-container {
+            max-height: 300px; overflow-y: auto; scrollbar-width: thin;
+            scrollbar-color: #ccc #f8fff0;
+        }
+        #debt-list-container::-webkit-scrollbar, #stocks-list-container::-webkit-scrollbar { width: 8px; }
+        #debt-list-container::-webkit-scrollbar-track, #stocks-list-container::-webkit-scrollbar-track {
+            background: #f8fff0; border-radius: 10px;
+        }
+        #debt-list-container::-webkit-scrollbar-thumb, #stocks-list-container::-webkit-scrollbar-thumb {
+            background-color: #ccc; border-radius: 10px; border: 2px solid #f8fff0;
+        }
+        /* End scrollbar styles */
+
+
+        /* Loading indicator styles */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(248, 255, 240, 0.9); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+            transition: opacity 0.5s ease-out; opacity: 1;
+        }
+        .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid var(--primary-color);
+            border-radius: 50%; border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* End loading indicator */
+
+
+        /* --- ADDED: Navigation Bar Styles --- */
+        .nav-bar {
+            position: fixed; /* Fixed position at the bottom */
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white; /* Match header background */
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem 0;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08); /* Shadow above the bar */
+            z-index: 100; /* Ensure it's above the dashboard content */
+        }
+        .nav-button {
+            text-decoration: none; /* Remove underline from links */
+            padding: 0.6rem 1rem; /* Adjust padding */
+            border-radius: var(--border-radius); /* Use theme variable */
+            cursor: pointer;
+            color: #7f8c8d; /* Default text color */
+            transition: all 0.2s;
+            font-size: 13px; /* Adjust font size */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1; /* Allow buttons to take up space */
+            text-align: center; /* Center text */
+        }
+        .nav-button.active {
+            background: #3498db; /* Active button background (consider theme variable) */
+            color: white; /* Active button text color */
+            box-shadow: 0 4px 12px rgba(52,152,219,0.2); /* Optional shadow */
+        }
+        /* --- End Navigation Bar Styles --- */
+
+
+        /* Responsive Design Adjustments */
+        @media (max-width: 900px) {
+            .multi-column { grid-template-columns: 1fr; } /* Stack columns on medium screens */
+        }
+
+        @media (max-width: 600px) {
+            .header { padding: 10px 15px; }
+            .title { font-size: 20px; }
+            .dashboard-content {
+                padding: 15px;
+                padding-bottom: 80px; /* Maintain space for nav bar on small screens */
+            }
+            .profit-amount { font-size: 32px; }
+            .fiscal-year { flex-direction: column; gap: 5px; } /* Stack fiscal year details */
+            .fiscal-year div:last-child { text-align: right; } /* Align amounts right */
+            td, th { padding: 8px; font-size: 13px; }
+            .debt-name, .stock-name { font-size: 13px; }
+            .debt-amount, .stock-price { font-size: 14px; }
+            .add-button { font-size: 13px; }
+            .nav-button { padding: 0.25rem 0.25rem; font-size: 11px; } /* Adjust nav button size */
+            .multi-column { grid-template-columns: 1fr; } /* Ensure single column on small */
+        }
+        /* End Responsive Design */
+
+    </style>
+</head>
+<body>
+
+<div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="dashboard-container">
+    <div class="header">
+        <div class="title">Dashboard</div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="dashboard-grid">
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-title">Profit and loss</div>
+                    <div class="date-filter">
+                        <button class="view-report">View Report</button>
+                        <select class="select-filter" id="profit-time-range">
+                            <option value="1" selected>1-6 Months</option>
+                            <option value="2">7-12 Months</option>
+                            <option value="3">Last year</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-description">Income and expenses (includes unpaid invoices and bills)</div>
+                <div class="profit-chart">
+                    <div class="profit-chart-header">
+                        <div class="profit-indicator" id="profit-indicator">+12%</div>
+                    </div>
+                    <div class="profit-amount" id="profit-amount">₹192,000</div>
+                    <div class="profit-label">Net Profit (Selected Period)</div>
+                    <div class="line-chart" id="profit-chart-container">
+                        <svg viewBox="0 0 300 100" id="profit-chart-svg" preserveAspectRatio="none">
+                            <line x1="0" y1="95" x2="300" y2="95" stroke="#555" stroke-width="1"/> <path d="M0,80 C30,75 60,65 90,70 C120,60 150,50 180,45 C210,40 240,30 270,25 C280,20 290,15 300,10" stroke="#8cde7c" stroke-width="3" fill="none" /> <circle cx="300" cy="10" r="4" fill="#8cde7c" /> </svg>
+                    </div>
+                    <div class="chart-summary">
+                        <div class="chart-summary-item">
+                            <div class="summary-amount" id="inflow-amount">₹80,000</div>
+                            <div class="summary-label">Inflow</div>
+                        </div>
+                        <div class="chart-summary-item">
+                            <div class="summary-amount" id="outflow-amount">₹2,000</div>
+                            <div class="summary-label">Outflow</div>
+                        </div>
+                    </div>
+                    <div class="month-labels" id="profit-month-labels">
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-title">Net income</div>
+                    <div class="date-filter">
+                        <select class="select-filter" id="fiscal-year-select">
+                            <option value="2020-2021">2020 - 2021</option>
+                            <option value="2021-2022">2021 - 2022</option>
+                            <option value="2022-2023">2022 - 2023</option>
+                            <option value="2023-2024">2023 - 2024</option>
+                            <option value="2024-2025" selected>2024 - 2025</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fiscal-year">
+                    <div>Fiscal Year</div>
+                    <div>
+                        <span id="year1">2024</span>
+                        <span style="margin-left: 80px;" id="year2">2025</span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th id="table-year1">2024</th>
+                            <th id="table-year2">2025</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Income</td>
+                            <td id="income1">₹512,300.45</td>
+                            <td id="income2">₹595,800.90</td>
+                        </tr>
+                        <tr>
+                            <td>Expense</td>
+                            <td id="expense1">₹451,875.20</td>
+                            <td id="expense2">₹520,450.60</td>
+                        </tr>
+                        <tr style="font-weight: bold;">
+                            <td>Net Income</td>
+                            <td id="net-income1">₹60,425.25</td>
+                            <td id="net-income2">₹75,350.30</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="multi-column">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Debt List</div>
+                        <button class="view-report" onclick="window.location.href='debt.html'">Manage</button> </div>
+                    <div id="debt-list-container">
+                        <div class="empty-state" id="empty-debt-state">
+                            <div class="empty-state-icon">💸</div>
+                            <p>No debt items found</p>
+                        </div>
+                    </div>
+                    <div class="add-button" id="add-debt-btn">+ Add Debt Item</div>
+                </div>
+
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">Favorite Stocks</div>
+                        <button class="view-report" onclick="window.location.href='stock.html'">Manage</button> </div>
+                    <div id="stocks-list-container">
+                        <div class="empty-state" id="empty-stocks-state">
+                            <div class="empty-state-icon">📈</div>
+                            <p>No favorite stocks found</p>
+                        </div>
+                    </div>
+                    <div class="add-button" id="add-stock-btn">+ Add Stock</div>
+                </div>
+            </div></div> </div> </div> <div class="nav-bar">
+    <a href="#" class="nav-button active">Dashboard</a>
+    <a href="DebtClearance.html" class="nav-button">Debt</a>
+    <a href="StockList.html" class="nav-button">Stock</a>
+    <a href="UserPage.html" class="nav-button">User Profile</a>
+</div>
+<script>
+    // Sample data for initialization if localStorage is empty
+    const sampleDebts = [
+        { id: 1, name: "Home Loan", amount: 2500000, date: "2025-10-15", interestRate: "6.5%" },
+        { id: 2, name: "Car Loan", amount: 450000, date: "2026-05-20", interestRate: "8.2%" },
+        { id: 3, name: "Credit Card", amount: 35000, date: "2025-05-10", interestRate: "24.99%" }
+    ];
+
+    const sampleStocks = [
+        { id: 1, symbol: "RELIANCE", name: "Reliance Industries", price: 2842.25, change: 2.3 },
+        { id: 2, symbol: "TCS", name: "Tata Consultancy Services", price: 3415.75, change: -0.8 },
+        { id: 3, symbol: "INFY", name: "Infosys Ltd.", price: 1472.40, change: 1.5 }
+    ];
+
+    // Sample chart data for different time ranges
+    const chartData = {
+        1: { path: "M0,80 C30,75 60,65 90,70 C120,60 150,50 180,45 C210,40 240,30 270,25 C280,20 290,15 300,10", indicator: "+12%", amount: "₹192,000", inflow: "₹80,000", outflow: "₹2,000", labels: ["Nov 24", "Dec 24", "Jan 25", "Feb 25", "Mar 25", "Apr 25"] },
+        2: { path: "M0,90 C30,85 60,70 90,75 C120,65 150,55 180,60 C210,50 240,45 270,35 C280,30 290,40 300,30", indicator: "+8.5%", amount: "₹145,000", inflow: "₹65,000", outflow: "₹5,500", labels: ["May 24", "Jun 24", "Jul 24", "Aug 24", "Sep 24", "Oct 24"] },
+        3: { path: "M0,95 C30,80 60,75 90,60 C120,65 150,50 180,55 C210,40 240,35 270,20 C280,25 290,15 300,10", indicator: "+15.2%", amount: "₹210,000", inflow: "₹95,000", outflow: "₹3,200", labels: ["Apr 24", "Jul 24", "Oct 24", "Jan 25", "Mar 25"] }
+    };
+
+    // Sample fiscal year data
+    const fiscalYearData = {
+        "2020-2021": { year1: "2020", year2: "2021", income1: "₹44,491.53", income2: "₹244,834.70", expense1: "₹162,383.46", expense2: "₹242,466.60", netIncome1: "-₹117,891.93", netIncome2: "₹2,368.10" },
+        "2021-2022": { year1: "2021", year2: "2022", income1: "₹244,834.70", income2: "₹350,500.25", expense1: "₹242,466.60", expense2: "₹320,125.40", netIncome1: "₹2,368.10", netIncome2: "₹30,374.85" },
+        "2022-2023": { year1: "2022", year2: "2023", income1: "₹350,500.25", income2: "₹425,750.80", expense1: "₹320,125.40", expense2: "₹380,620.35", netIncome1: "₹30,374.85", netIncome2: "₹45,130.45" },
+        "2023-2024": { year1: "2023", year2: "2024", income1: "₹425,750.80", income2: "₹512,300.45", expense1: "₹380,620.35", expense2: "₹451,875.20", netIncome1: "₹45,130.45", netIncome2: "₹60,425.25" },
+        "2024-2025": { year1: "2024", year2: "2025", income1: "₹512,300.45", income2: "₹595,800.90", expense1: "₹451,875.20", expense2: "₹520,450.60", netIncome1: "₹60,425.25", netIncome2: "₹75,350.30" }
+    };
+
+    // --- Helper Functions ---
+    function numberWithCommas(x) {
+        if (x === null || x === undefined) return '';
+        let parts = x.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // Handle Indian numbering system (optional, standard commas used above)
+        // parts[0] = parts[0].replace(/\B(?=(\d{2})+(?!\d{3}))/g, ",");
+        return parts.join(".");
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        try {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-IN', options);
+        } catch (e) {
+            console.error("Error formatting date:", dateString, e);
+            return dateString; // Return original if parsing fails
+        }
+    }
+
+    // --- LocalStorage Initialization ---
+    function initializeLocalStorage() {
+        if (!localStorage.getItem('debts')) {
+            localStorage.setItem('debts', JSON.stringify(sampleDebts));
+        }
+        if (!localStorage.getItem('favoriteStocks')) {
+            localStorage.setItem('favoriteStocks', JSON.stringify(sampleStocks));
+        }
+    }
+
+    // --- Rendering Functions ---
+    function renderDebtList() {
+        const debts = JSON.parse(localStorage.getItem('debts') || '[]');
+        const container = document.getElementById('debt-list-container');
+        const emptyState = document.getElementById('empty-debt-state');
+
+        // Clear previous content, keeping the empty state element template
+        while (container.firstChild && container.firstChild !== emptyState) {
+            container.removeChild(container.firstChild);
+        }
+
+        if (debts.length === 0) {
+            emptyState.style.display = 'block'; // Show empty state
+        } else {
+            emptyState.style.display = 'none'; // Hide empty state
+            debts.forEach(debt => {
+                const debtItem = document.createElement('div');
+                debtItem.className = 'debt-item';
+                debtItem.innerHTML = `
+                    <div class="debt-details">
+                        <div class="debt-name">${debt.name || 'Unnamed Debt'}</div>
+                        <div class="debt-date">Due: ${formatDate(debt.date)} | ${debt.interestRate || 'N/A'}</div>
+                    </div>
+                    <div class="debt-amount">₹${numberWithCommas(debt.amount)}</div>
+                `;
+                // Insert before the empty state element (which is hidden)
+                container.insertBefore(debtItem, emptyState);
+            });
+        }
+    }
+
+    function renderFavoriteStocks() {
+        const stocks = JSON.parse(localStorage.getItem('favoriteStocks') || '[]');
+        const container = document.getElementById('stocks-list-container');
+        const emptyState = document.getElementById('empty-stocks-state');
+
+        // Clear previous content, keeping the empty state element template
+        while (container.firstChild && container.firstChild !== emptyState) {
+            container.removeChild(container.firstChild);
+        }
+
+        if (stocks.length === 0) {
+            emptyState.style.display = 'block'; // Show empty state
+        } else {
+            emptyState.style.display = 'none'; // Hide empty state
+            stocks.forEach(stock => {
+                const stockItem = document.createElement('div');
+                stockItem.className = 'stock-item';
+                const change = parseFloat(stock.change) || 0;
+                const price = parseFloat(stock.price) || 0;
+                const changeClass = change >= 0 ? 'positive-change' : 'negative-change';
+                const changeSymbol = change > 0 ? '+' : '';
+                stockItem.innerHTML = `
+                    <div class="stock-details">
+                        <div class="stock-name">${stock.symbol || 'N/A'} - ${stock.name || 'Unknown Stock'}</div>
+                         <div class="stock-change ${changeClass}">${changeSymbol}${change.toFixed(1)}%</div>
+                    </div>
+                    <div class="stock-price">₹${numberWithCommas(price.toFixed(2))}</div>
+                `;
+                // Insert before the empty state element (which is hidden)
+                container.insertBefore(stockItem, emptyState);
+            });
+        }
+    }
+
+    // --- Data Update Functions ---
+    function updateProfitChart() {
+        const timeRangeSelect = document.getElementById('profit-time-range');
+        // Ensure the element exists before accessing its value
+        if (!timeRangeSelect) {
+            console.error("Profit time range selector not found");
+            return;
+        }
+        const timeRange = timeRangeSelect.value;
+        const data = chartData[timeRange];
+
+        if (!data) {
+            console.error("No chart data found for time range:", timeRange);
+            return; // Exit if data for selected range is missing
+        }
+
+        const svg = document.getElementById('profit-chart-svg');
+        const pathElement = svg ? svg.querySelector('path') : null;
+        const circleElement = svg ? svg.querySelector('circle') : null;
+        const monthLabelsContainer = document.getElementById('profit-month-labels');
+        const profitIndicator = document.getElementById('profit-indicator');
+        const profitAmount = document.getElementById('profit-amount');
+        const inflowAmount = document.getElementById('inflow-amount');
+        const outflowAmount = document.getElementById('outflow-amount');
+
+        // Check if all elements exist before updating
+        if (!svg || !pathElement || !circleElement || !monthLabelsContainer || !profitIndicator || !profitAmount || !inflowAmount || !outflowAmount) {
+            console.error("One or more profit chart elements are missing from the DOM.");
+            return;
+        }
+
+        // Update SVG path and circle position
+        pathElement.setAttribute('d', data.path);
+        try {
+            const pathSegments = data.path.match(/[+-]?\d+(\.\d+)?/g); // Extract numbers
+            if (pathSegments && pathSegments.length >= 2) {
+                const lastX = pathSegments[pathSegments.length - 2];
+                const lastY = pathSegments[pathSegments.length - 1];
+                circleElement.setAttribute('cx', lastX);
+                circleElement.setAttribute('cy', lastY);
+            } else {
+                console.warn("Could not reliably parse end point from path:", data.path);
+                // Default position if parsing fails
+                circleElement.setAttribute('cx', '300');
+                circleElement.setAttribute('cy', '50');
+            }
+        } catch(e) {
+            console.error("Error parsing SVG path end point:", e);
+            circleElement.setAttribute('cx', '300'); // Fallback
+            circleElement.setAttribute('cy', '50'); // Fallback
+        }
+
+        // Update text content
+        profitIndicator.textContent = data.indicator;
+        profitAmount.textContent = data.amount;
+        inflowAmount.textContent = data.inflow;
+        outflowAmount.textContent = data.outflow;
+
+        // Update month labels
+        monthLabelsContainer.innerHTML = ''; // Clear existing labels
+        if (data.labels && data.labels.length > 0) {
+            data.labels.forEach((label) => {
+                const span = document.createElement('span');
+                span.textContent = label;
+                monthLabelsContainer.appendChild(span);
+            });
+            // Adjust label justification based on count
+            if (data.labels.length < 3) {
+                monthLabelsContainer.style.justifyContent = 'space-around';
+            } else {
+                monthLabelsContainer.style.justifyContent = 'space-between';
+            }
+        } else { // Default labels if none provided
+            monthLabelsContainer.innerHTML = `<span>Start</span><span>Mid</span><span>End</span>`;
+            monthLabelsContainer.style.justifyContent = 'space-between';
+        }
+    }
+
+    function updateFiscalYearData() {
+        const selectElement = document.getElementById('fiscal-year-select');
+        if (!selectElement) {
+            console.error("Fiscal year selector not found");
+            return;
+        }
+        const selectedYearRange = selectElement.value;
+        const data = fiscalYearData[selectedYearRange];
+
+        if (!data) {
+            console.error("No data found for fiscal year:", selectedYearRange);
+            return; // Exit if data is missing
+        }
+
+        // Helper function to safely update text content
+        const updateText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value !== undefined && value !== null ? value : 'N/A';
+            } else {
+                console.warn(`Element with id "${id}" not found.`);
+            }
+        };
+
+        updateText('year1', data.year1);
+        updateText('year2', data.year2);
+        updateText('table-year1', data.year1);
+        updateText('table-year2', data.year2);
+        updateText('income1', data.income1);
+        updateText('income2', data.income2);
+        updateText('expense1', data.expense1);
+        updateText('expense2', data.expense2);
+        updateText('net-income1', data.netIncome1);
+        updateText('net-income2', data.netIncome2);
+    }
+
+    // --- Stock Update Simulation ---
+    let stockUpdateInterval = null; // Initialize interval ID
+    function startStockUpdates() {
+        stopStockUpdates(); // Clear existing interval before starting a new one
+        stockUpdateInterval = setInterval(() => {
+            try {
+                const stocks = JSON.parse(localStorage.getItem('favoriteStocks') || '[]');
+                if (stocks.length === 0) return; // No need to update if empty
+
+                let updated = false;
+                stocks.forEach(stock => {
+                    const currentPrice = parseFloat(stock.price) || 0;
+                    if (currentPrice > 0) { // Only update if price is valid
+                        const changePercent = (Math.random() * 1 - 0.5) * 0.5; // Small random change (-0.25% to +0.25%)
+                        stock.change = parseFloat(changePercent.toFixed(1));
+                        const priceChange = currentPrice * (changePercent / 100);
+                        stock.price = parseFloat((currentPrice + priceChange).toFixed(2)); // Keep 2 decimal places
+                        updated = true;
+                    }
+                });
+
+                if (updated) {
+                    localStorage.setItem('favoriteStocks', JSON.stringify(stocks));
+                    renderFavoriteStocks(); // Re-render only if data was changed
+                }
+            } catch (e) {
+                console.error("Error during stock update:", e);
+                stopStockUpdates(); // Stop interval if there's an error
+            }
+        }, 5000); // Update every 5 seconds
+    }
+
+    function stopStockUpdates() {
+        if (stockUpdateInterval) {
+            clearInterval(stockUpdateInterval);
+            stockUpdateInterval = null; // Reset interval ID
+        }
+    }
+
+    // --- Event Listeners Setup ---
+    function setupEventListeners() {
+        // Ensure elements exist before adding listeners
+        const profitRangeSelect = document.getElementById('profit-time-range');
+        if (profitRangeSelect) {
+            profitRangeSelect.addEventListener('change', updateProfitChart);
+        } else { console.warn("Profit range select not found for listener."); }
+
+        const fiscalYearSelect = document.getElementById('fiscal-year-select');
+        if (fiscalYearSelect) {
+            fiscalYearSelect.addEventListener('change', updateFiscalYearData);
+        } else { console.warn("Fiscal year select not found for listener."); }
+
+        const addDebtBtn = document.getElementById('add-debt-btn');
+        if (addDebtBtn) {
+            addDebtBtn.addEventListener('click', function() {
+                // Placeholder: Add actual logic or redirect
+                alert('Add Debt Item functionality to be implemented.');
+                // Example: Redirect to the debt management page
+                // window.location.href = 'debt.html';
+            });
+        } else { console.warn("Add debt button not found for listener."); }
+
+        const addStockBtn = document.getElementById('add-stock-btn');
+        if (addStockBtn) {
+            addStockBtn.addEventListener('click', function() {
+                // Placeholder: Add actual logic or redirect
+                alert('Add Stock functionality to be implemented.');
+                // Example: Redirect to the stock management page
+                // window.location.href = 'stock.html';
+            });
+        } else { console.warn("Add stock button not found for listener."); }
+
+        // Add listeners for "View Report" buttons if they should do something specific
+        document.querySelectorAll('.view-report').forEach(button => {
+            // Example: Check parent card title to determine action
+            const cardTitle = button.closest('.dashboard-card')?.querySelector('.card-title')?.textContent;
+            if (cardTitle?.includes('Profit')) {
+                button.addEventListener('click', () => alert('Profit report view to be implemented.'));
+            }
+            // Note: Manage buttons for Debt/Stock lists already have onclick handlers in HTML
+        });
+    }
+
+    // --- Dashboard Initialization ---
+    function initializeDashboard() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (!loadingOverlay) {
+            console.error("Loading overlay not found!");
+            // Attempt to proceed anyway, but loading won't show/hide
+        } else {
+            loadingOverlay.classList.remove('hidden'); // Show loading
+        }
+
+
+        try {
+            initializeLocalStorage(); // Set up sample data if needed
+            renderDebtList();
+            renderFavoriteStocks();
+            updateProfitChart(); // Initial chart render
+            updateFiscalYearData(); // Initial fiscal data render
+            setupEventListeners(); // Add interactivity
+            startStockUpdates(); // Start live stock updates
+        } catch (error) {
+            console.error("Error during dashboard initialization:", error);
+            // Optionally display an error message to the user
+            const contentArea = document.querySelector('.dashboard-content');
+            if(contentArea) {
+                contentArea.innerHTML = '<p style="color: red; text-align: center; padding: 20px;">Failed to load dashboard components. Please try refreshing the page.</p>';
+            }
+        } finally {
+            // Hide loading overlay after a short delay, even if errors occurred
+            setTimeout(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }, 300); // Shorter delay
+        }
+    }
+
+    // --- Run Initialization ---
+    // Use DOMContentLoaded to ensure HTML is parsed before running scripts
+    document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+    // Cleanup interval on page unload/close to prevent memory leaks
+    window.addEventListener('beforeunload', stopStockUpdates);
+
+</script>
+
+</body>
+</html>

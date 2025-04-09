@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        /* --- Base Styles (Light Theme) --- */
+        :root {
+            /* Light Theme Colors */
+            --bg-color: #f5f5f5;
+            --card-bg-color: white;
+            --header-bg-color: white;
+            --header-border-color: #eee;
+            --header-shadow-color: rgba(0,0,0,0.05);
+            --text-primary-color: #333;
+            --text-secondary-color: #666;
+            --text-accent-color: #e0e0e0; /* Light theme uses this for contrast in dark */
+            --border-color: #eee;
+            --detail-bg-color: #f9f9f9;
+            --detail-group-bg: white;
+            --detail-group-shadow: rgba(0,0,0,0.05);
+            --detail-row-border: #f0f0f0;
+            --verified-badge-color: #1DA1F2;
+            --status-tag-bg: #E8F5E9;
+            --status-tag-color: #2E7D32;
+            --button-bg: #eee;
+            --button-text: #333;
+            --button-hover-bg: #ddd;
+            --nav-active-bg: #3498db; /* Example active color */
+            --nav-active-text: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transitions */
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            background-color: var(--bg-color); /* Use CSS variable */
+            overflow: hidden; /* Prevent body scroll, rely on .profile-card scroll */
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        .profile-card {
+            background-color: var(--card-bg-color); /* Use CSS variable */
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            overflow-y: auto; /* This container scrolls */
+            border: none;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 90px; /* ADDED: Space for the bottom nav bar */
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Adjust for button */
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--header-border-color); /* Use CSS variable */
+            gap: 10px;
+            background-color: var(--header-bg-color); /* Use CSS variable */
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px var(--header-shadow-color); /* Use CSS variable */
+            flex-shrink: 0; /* Prevent header from shrinking */
+        }
+
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .back-icon { color: var(--text-primary-color); font-size: 20px; cursor: pointer; }
+        .header-title { font-size: 16px; color: var(--text-primary-color); font-weight: 500; }
+        #theme-toggle {
+            padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px;
+            cursor: pointer; background-color: var(--button-bg); color: var(--button-text);
+        }
+        #theme-toggle:hover { background-color: var(--button-hover-bg); }
+
+
+        .profile-content { padding: 32px 20px; text-align: center; background-color: var(--card-bg-color); }
+        .profile-img {
+            width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px;
+            background-color: #FFC107; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; transition: width 0.3s ease, height 0.3s ease;
+        }
+        .profile-img img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-name {
+            font-size: 24px; font-weight: 600; color: var(--text-primary-color); margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .verified-badge { color: var(--verified-badge-color); margin-left: 8px; font-size: 18px; }
+        .profile-email { font-size: 16px; color: var(--text-secondary-color); margin-bottom: 32px; }
+
+
+        .profile-details { padding: 24px 20px; text-align: left; flex-grow: 1; background-color: var(--detail-bg-color); }
+        .section-title {
+            font-size: 18px; font-weight: 600; color: var(--text-primary-color); margin-bottom: 20px;
+            padding-bottom: 8px; border-bottom: 2px solid var(--border-color);
+        }
+        .details-group {
+            margin-bottom: 32px; background-color: var(--detail-group-bg); padding: 20px;
+            border-radius: 8px; box-shadow: 0 1px 3px var(--detail-group-shadow);
+        }
+        .detail-row {
+            display: flex; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--detail-row-border);
+        }
+        .detail-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .detail-label { font-size: 15px; color: var(--text-secondary-color); flex: 1; min-width: 140px; }
+        .detail-value { font-size: 15px; color: var(--text-primary-color); font-weight: 500; flex: 1; text-align: right; }
+        .status-tag {
+            display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 500;
+            background-color: var(--status-tag-bg); color: var(--status-tag-color);
+        }
+
+
+        /* --- Dark Mode Styles --- */
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg-color: #1e1e1e;
+            --header-bg-color: #1e1e1e;
+            --header-border-color: #333;
+            --header-shadow-color: rgba(0,0,0,0.2);
+            --text-primary-color: #e0e0e0;
+            --text-secondary-color: #aaa;
+            --text-accent-color: #333; /* Dark theme uses this for contrast in light */
+            --border-color: #333;
+            --detail-bg-color: #121212;
+            --detail-group-bg: #1e1e1e;
+            --detail-group-shadow: rgba(0,0,0,0.2);
+            --detail-row-border: #333;
+            /* --verified-badge-color: #1DA1F2; */
+            --status-tag-bg: #1B5E20;
+            --status-tag-color: #A5D6A7;
+            --button-bg: #333;
+            --button-text: #e0e0e0;
+            --button-hover-bg: #444;
+            --nav-active-bg: #5fa8d3; /* Lighter blue for dark mode */
+            --nav-active-text: #121212; /* Dark text on lighter blue */
+        }
+
+
+        /* --- ADDED: Bottom Navigation Bar Styles --- */
+        .nav-bar {
+            position: fixed; /* Fixed position at the bottom */
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--header-bg-color); /* Use theme variable */
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem 0;
+            box-shadow: 0 -4px 12px var(--header-shadow-color); /* Use theme variable */
+            z-index: 999; /* Below potential overlays, above main content */
+            border-top: 1px solid var(--header-border-color); /* Use theme variable */
+        }
+        .nav-button {
+            text-decoration: none; /* Remove underline from links */
+            padding: 0.6rem 1rem; /* Adjust padding */
+            border-radius: 8px; /* Consistent radius */
+            cursor: pointer;
+            color: var(--text-secondary-color); /* Use theme variable */
+            transition: background-color 0.2s, color 0.2s; /* Smooth transition */
+            font-size: 13px; /* Adjust font size */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1; /* Allow buttons to take up space */
+            text-align: center; /* Center text */
+            min-width: 0; /* Prevent overflow on small screens */
+            background: transparent; /* Default background */
+            border: none; /* Ensure no default button border */
+        }
+        .nav-button.active {
+            background: var(--nav-active-bg); /* Use theme variable for active */
+            color: var(--nav-active-text); /* Use theme variable for active */
+        }
+        /* --- End Bottom Navigation Bar Styles --- */
+
+
+        /* --- Media Queries for Responsive Design --- */
+        /* Tablet */
+        @media screen and (min-width: 768px) {
+            .profile-card { height: 100%; max-height: 100%; padding-bottom: 90px; /* Maintain padding */}
+            .profile-img { width: 120px; height: 120px; }
+            .profile-name { font-size: 28px; }
+            .profile-content { padding: 40px 32px; }
+            .profile-details { padding: 32px; }
+            .detail-row { padding-right: 16px; }
+            .header { padding: 16px 32px; }
+            #theme-toggle { padding: 8px 16px; font-size: 14px; }
+            .nav-button { font-size: 14px; padding: 0.7rem 1.2rem; } /* Slightly larger nav buttons */
+        }
+
+        /* Desktop */
+        @media screen and (min-width: 1024px) {
+            .profile-card {
+                display: grid;
+                grid-template-columns: 340px 1fr;
+                grid-template-rows: auto 1fr; /* Header row, Content row */
+                grid-template-areas:
+                    "header header"
+                    "sidebar main";
+                padding-bottom: 0; /* Remove padding, rely on content areas */
+                height: calc(100vh - 75px); /* Adjust height for nav bar */
+                margin-bottom: 75px; /* Space for fixed nav bar */
+                overflow: hidden; /* Prevent card scroll, use internal scroll */
+            }
+            .header { grid-area: header; padding: 20px 32px; position: static; /* Unstick header in grid */ box-shadow: none;}
+            .profile-content {
+                grid-area: sidebar; text-align: center; padding: 48px 32px;
+                border-right: 1px solid var(--border-color); height: 100%;
+                overflow-y: auto; /* Allow sidebar scroll if needed */
+            }
+            .profile-img { width: 160px; height: 160px; margin-bottom: 24px; }
+            .profile-details {
+                grid-area: main; padding: 40px 48px; overflow-y: auto; /* Main content scrolls */ height: 100%;
+            }
+            .details-group { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 20px; }
+            .section-title { grid-column: 1 / -1; margin-bottom: 24px; }
+            .detail-row { border-bottom: none; padding-bottom: 0; }
+            /* Ensure border color respects theme */
+            body.dark-mode .profile-content { border-right-color: var(--border-color); }
+
+            /* Hide bottom nav bar for larger desktop? Optional. */
+            /* .nav-bar { display: none; } */
+        }
+
+        /* Large Desktop */
+        @media screen and (min-width: 1440px) {
+            .profile-card { grid-template-columns: 400px 1fr; margin-bottom: 75px; height: calc(100vh - 75px); }
+            .profile-details { padding: 48px 64px; }
+            .details-group { grid-template-columns: 1fr 1fr 1fr; }
+            .detail-row.medium-width { grid-column: span 2; }
+            .detail-row.full-width { grid-column: 1 / -1; }
+        }
+
+    </style>
+</head>
+<body>
+<div class="profile-card">
+    <div class="header">
+        <div class="header-left">
+            <div class="header-title">My Account</div>
+        </div>
+        <button id="theme-toggle">Toggle Theme</button>
+    </div>
+
+    <div class="profile-content">
+        <div class="profile-img">
+            <img src="./Assets/boy.png" alt="Profile photo">
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">
+                Marko Wilson
+                <span class="verified-badge">✓</span>
+            </div>
+            <div class="profile-email">wilson@example.com</div>
+        </div>
+    </div>
+
+    <div class="profile-details">
+        <div class="details-group">
+            <div class="section-title">Personal details</div>
+
+            <div class="detail-row">
+                <div class="detail-label">Full name:</div>
+                <div class="detail-value">Marko Wilson Roy</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Date of Birth:</div>
+                <div class="detail-value">January 1, 2000</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Gender:</div>
+                <div class="detail-value">Male</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Nationality:</div>
+                <div class="detail-value">Indian American</div>
+            </div>
+            <div class="detail-row medium-width"> <div class="detail-label">Address:</div>
+                <div class="detail-value">Visakhapatnam - India, California - United States</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Phone Number:</div>
+                <div class="detail-value">+91 9138451131</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Email:</div>
+                <div class="detail-value">wilson@example.com</div>
+            </div>
+        </div>
+
+        <div class="details-group">
+            <div class="section-title">Account Details</div>
+
+            <div class="detail-row">
+                <div class="detail-label">Display Name:</div>
+                <div class="detail-value">m_wilson_168920</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Account Created:</div>
+                <div class="detail-value">March 20, 2021</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Last Login:</div>
+                <div class="detail-value" id="last-login">April 9, 2025</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Membership Status:</div>
+                <div class="detail-value">Premium Member</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Account Verification:</div>
+                <div class="detail-value">
+                    <span class="status-tag">Verified</span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Language Preference:</div>
+                <div class="detail-value">English</div>
+            </div>
+        </div>
+    </div>
+</div> <div class="nav-bar">
+    <a href="DashboardPage.html" class="nav-button">Dashboard</a>
+    <a href="DebtClearance.html" class="nav-button">Debt</a>
+    <a href="StockList.html" class="nav-button">Stock</a>
+    <a href="#" class="nav-button active">User Profile</a> </div>
+<script>
+    // --- Existing JavaScript ---
+    const backIcon = document.querySelector('.back-icon');
+    if (backIcon) {
+        backIcon.addEventListener('click', function() {
+            // window.history.back(); // More standard back behavior
+            alert('Back button function placeholder.');
+        });
+    } // No warning if not found, as it might be intentionally removed
+
+
+    function adjustLayout() {
+        const width = window.innerWidth;
+        const profileDetails = document.querySelector('.profile-details');
+        if (!profileDetails) return;
+
+        const detailRows = profileDetails.querySelectorAll('.detail-row');
+
+        const addressRow = Array.from(detailRows).find(row => {
+            const label = row.querySelector('.detail-label');
+            return label && label.textContent.includes('Address');
+        });
+
+        // Remove existing classes first
+        if (addressRow) {
+            addressRow.classList.remove('medium-width', 'full-width');
+        }
+
+        // Apply classes based on width
+        if (width >= 1440) {
+            if (addressRow) addressRow.classList.add('medium-width');
+        }
+        // No special 'full-width' class was defined in the original logic to apply here.
+    }
+
+    window.addEventListener('load', adjustLayout);
+    window.addEventListener('resize', adjustLayout);
+
+
+    // --- Update Last Login Date ---
+    function updateLastLoginDate() {
+        const lastLoginElement = document.getElementById('last-login');
+        if (lastLoginElement) {
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            lastLoginElement.textContent = today.toLocaleDateString('en-US', options);
+        }
+    }
+    window.addEventListener('load', updateLastLoginDate);
+
+
+    // --- Theme Toggle JavaScript ---
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    if (themeToggle) { // Check if button exists
+        const currentTheme = localStorage.getItem('theme');
+
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.textContent = 'Light Mode ☀️'; // Updated text
+                localStorage.setItem('theme', 'dark');
+            } else { // Default to light
+                body.classList.remove('dark-mode');
+                themeToggle.textContent = 'Dark Mode 🌙'; // Updated text
+                localStorage.setItem('theme', 'light');
+            }
+            adjustLayout(); // Re-run layout adjustments after theme change if needed
+        }
+
+        // Apply saved theme on load, default to light
+        setTheme(currentTheme === 'dark' ? 'dark' : 'light');
+
+        // Add event listener
+        themeToggle.addEventListener('click', () => {
+            const newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
+            setTheme(newTheme);
+        });
+
+    } else {
+        console.warn("Theme toggle button not found."); // Optional warning
+    }
+
+</script>
+</body>
+</html>

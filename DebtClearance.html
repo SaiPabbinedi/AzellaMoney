@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debt Management</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 350px;
+            overflow: auto;
+        }
+        body.dark-mode .analysis-section {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode .analysis-section h3,
+        body.dark-mode .analysis-section p,
+        body.dark-mode .analysis-section label {
+            color: #ecf0f1;
+        }
+        body {
+            background: #f8f9fa;
+            color: #2c3e50;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        /* Dark mode styles */
+        body.dark-mode {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode p,
+        body.dark-mode label {
+            color: #ecf0f1;
+        }
+        body.dark-mode .debt-card,
+        body.dark-mode .modal-content {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode input,
+        body.dark-mode select {
+            background: #3a4b5c;
+            color: #ecf0f1;
+            border-color: #3a4b5c;
+        }
+        body.dark-mode .nav-bar {
+            background: #34495e;
+        }
+        body.dark-mode .nav-button {
+            text-decoration: none;
+            color: #bdc3c7;
+        }
+        body.dark-mode .nav-button.active {
+            text-decoration: none;
+            background: #3498db;
+            color: #fff;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+        .active-screen {
+            display: block;
+        }
+        .header {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: inherit;
+        }
+        .debt-list {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .debt-card {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid #3498db;
+            cursor: pointer;
+            color: inherit;
+        }
+        .debt-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .debt-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: inherit;
+        }
+        .debt-detail {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin: 0.3rem 0;
+        }
+        body.dark-mode .debt-detail {
+            color: #bdc3c7;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .delete-btn:hover {
+            transform: scale(1.2);
+        }
+        .add-button, .analyze-button {
+            position: fixed;
+            bottom: 5.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(52,152,219,0.3);
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            color: white;
+            transition: transform 0.2s;
+        }
+        .add-button {
+            right: 1.5rem;
+            background: #3498db;
+        }
+        .analyze-button {
+            right: 8rem;
+            background: #2ecc71;
+        }
+        .add-button:hover, .analyze-button:hover {
+            transform: scale(1.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            position: relative;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease-in-out;
+            color: inherit;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-content.add-modal {
+            width: 90%;
+            max-width: 400px;
+        }
+        .modal-content.analysis-modal {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            font-weight: 500;
+            color: inherit;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        body.dark-mode .lumpsum-section {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode .emi-table tr:nth-child(odd) {
+            background: #34495e;
+        }
+
+        body.dark-mode .emi-table tr:nth-child(even) {
+            background: #3a4b5c;
+        }
+
+        body.dark-mode .emi-table tr:hover {
+            background: #2c3e50;
+        }
+        /* Analysis overlay dark-mode styling */
+        body.dark-mode .analysis-modal {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+
+        body.dark-mode .analysis-modal h2,
+        body.dark-mode .analysis-modal p,
+        body.dark-mode .analysis-modal label {
+            color: #ecf0f1;
+        }
+
+        /* If there is any table inside the analysis overlay, style odd/even rows */
+        body.dark-mode .analysis-modal .emi-table {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode .analysis-modal .emi-table tr:nth-child(odd) {
+            background: #34495e;
+        }
+        body.dark-mode .analysis-modal .emi-table tr:nth-child(even) {
+            background: #3a4b5c;
+        }
+        body.dark-mode .analysis-modal .emi-table tr:hover {
+            background: #2c3e50;
+        }
+
+
+        /* Additional dark-mode styles for Table */
+        body.dark-mode .emi-table {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode .emi-table th,
+        body.dark-mode .emi-table td {
+            color: #ecf0f1;
+        }
+        button:active {
+            opacity: 0.8;
+            transform: scale(0.95);
+        }
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem 0;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+        }
+        .nav-button {
+            text-decoration: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: all 0.2s;
+        }
+        .nav-button.active {
+            text-decoration: none;
+            background: #3498db;
+            color: white;
+            box-shadow: 0 4px 12px rgba(52,152,219,0.2);
+        }
+        .lumpsum-section {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .payment-history {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #ecf0f1;
+        }
+        .payment-item {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        #emiChart, .analysis-chart {
+            margin: 2rem 0;
+            width: 100% !important;
+            height: 350px !important;
+        }
+        .table-container {
+            margin: 2rem 0;
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .emi-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 600px;
+        }
+        .emi-table th,
+        .emi-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .emi-table th {
+            background: #3498db;
+            color: white;
+            font-weight: 500;
+        }
+        .emi-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        .emi-table tr:hover {
+            background: #f1f5f9;
+        }
+        .analysis-section {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        /* Theme toggle button */
+        #themeToggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+        #themeToggle:hover {
+            background: #2980b9;
+        }
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 1.5rem;
+            }
+            .nav-button {
+                text-decoration: none;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            .analyze-button {
+                right: 6rem;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<!-- Theme Toggle Button -->
+<button id="themeToggle" onclick="toggleTheme()">Toggle Theme</button>
+
+<!-- Debt Screen -->
+<div id="debt-screen" class="screen active-screen">
+    <h1 class="header">Debt Management</h1>
+    <div id="selected-debt"></div>
+    <div class="debt-list" id="debt-list"></div>
+    <button class="analyze-button" onclick="showAnalysisModal()">Analyze Strategies</button>
+    <button class="add-button" onclick="showAddDebtModal()">+ Add Debt</button>
+</div>
+
+<!-- Analytics Screen -->
+<div id="screen2" class="screen">
+    <h1 class="header">Analytics</h1>
+    <p style="padding: 20px;">Analytics content goes here.</p>
+</div>
+
+<!-- History Screen -->
+<div id="screen3" class="screen">
+    <h1 class="header">History</h1>
+    <p style="padding: 20px;">History content goes here.</p>
+</div>
+
+<!-- Add Debt Modal -->
+<div id="addDebtModal" class="modal">
+    <div class="modal-content add-modal">
+        <span class="close-btn" onclick="hideAddDebtModal()">&times;</span>
+        <h2 style="margin-bottom: 1.5rem;">Add New Debt</h2>
+        <div class="input-group">
+            <label for="debtName">Debt Name</label>
+            <input type="text" id="debtName" placeholder="Debt Name" />
+        </div>
+        <div class="input-group">
+            <label for="debtPrincipal">Principal Amount (₹)</label>
+            <input type="number" id="debtPrincipal" placeholder="Principal Amount" />
+        </div>
+        <div class="input-group">
+            <label for="debtRate">Annual Interest Rate (%)</label>
+            <input type="number" step="0.1" id="debtRate" placeholder="Annual Interest Rate" />
+        </div>
+        <div class="input-group">
+            <label for="debtTerm">Term (Months)</label>
+            <input type="number" id="debtTerm" placeholder="Term" />
+        </div>
+        <div class="button-group">
+            <button onclick="addDebt()" style="background: #3498db; color: white;">Save</button>
+            <button onclick="hideAddDebtModal()" style="background: #e74c3c; color: white;">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Modal -->
+<div id="analysisModal" class="modal">
+    <div class="modal-content analysis-modal">
+        <span class="close-btn" onclick="hideAnalysisModal()">&times;</span>
+        <h2 style="margin-bottom: 1.5rem;">Debt Payoff Analysis</h2>
+        <div class="input-group">
+            <label for="totalMonthlyPayment">Total Monthly Payment (₹)</label>
+            <input type="number" id="totalMonthlyPayment" placeholder="Enter total amount you can pay monthly" />
+        </div>
+        <button onclick="performAnalysis()" style="background: #2ecc71; color: white;">Analyze</button>
+        <div id="analysisResults"></div>
+    </div>
+</div>
+
+<!-- Navigation Bar -->
+<!--<div class="nav-bar">-->
+<!--    <div class="nav-button active" onclick="showScreen('debt-screen', event)">Debts</div>-->
+<!--    <div class="nav-button" onclick="showScreen('screen2', event)">Analytics</div>-->
+<!--    <div class="nav-button" onclick="showScreen('screen3', event)">History</div>-->
+<!--</div>-->
+<div class="nav-bar">
+    <a href="DashboardPage.html" class="nav-button">Dashboard</a>
+    <a href="#" class="nav-button active">Debt</a>
+    <a href="StockList.html" class="nav-button">Stock</a>
+    <a href="UserPage.html" class="nav-button">User Profile</a>
+</div>
+<script>
+    let debts = [];
+    let selectedDebt = null;
+    let chartInstance = null;
+
+    // Theme Toggle Functionality
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        if (document.getElementById('emiChart') && chartInstance) {
+            generateChart();
+        }
+    }
+
+    // Utility Functions
+    function saveDebts() {
+        localStorage.setItem('debts', JSON.stringify(debts));
+    }
+    function loadDebts() {
+        const stored = localStorage.getItem('debts');
+        if (stored) debts = JSON.parse(stored);
+    }
+    function calculateEMI(P, annualRate, n) {
+        const r = annualRate / 12 / 100;
+        return (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    }
+    function calculateRemainingMonths(balance, rate, emi) {
+        const monthlyRate = rate / 12 / 100;
+        let months = 0;
+        let currentBalance = balance;
+        while (currentBalance > 0 && months < 1000) {
+            const interest = currentBalance * monthlyRate;
+            const principal = Math.min(emi - interest, currentBalance);
+            currentBalance -= principal;
+            months++;
+        }
+        return months;
+    }
+    function generateAmortizationSchedule(debt = selectedDebt) {
+        if (!debt) return { schedule: [], totals: { principal: 0, interest: 0, payments: 0 } };
+        const schedule = [];
+        let balance = debt.currentBalance;
+        const monthlyRate = debt.annualRate / 12 / 100;
+        let totalPrincipal = 0;
+        let totalInterest = 0;
+        for (let month = 1; balance > 0 && month <= 1000; month++) {
+            const interest = balance * monthlyRate;
+            const principal = Math.min(debt.emi - interest, balance);
+            balance -= principal;
+            totalPrincipal += principal;
+            totalInterest += interest;
+            schedule.push({ month, principal, interest, balance: Math.max(balance, 0) });
+            if (balance <= 0) break;
+        }
+        return {
+            schedule,
+            totals: {
+                principal: totalPrincipal,
+                interest: totalInterest,
+                payments: totalPrincipal + totalInterest
+            }
+        };
+    }
+
+    // Debt Management Functions
+    function showAddDebtModal() {
+        document.getElementById('addDebtModal').style.display = 'flex';
+    }
+    function hideAddDebtModal() {
+        document.getElementById('addDebtModal').style.display = 'none';
+    }
+    function addDebt() {
+        const newDebt = {
+            id: Date.now(),
+            name: document.getElementById('debtName').value.trim(),
+            principal: parseFloat(document.getElementById('debtPrincipal').value),
+            currentBalance: parseFloat(document.getElementById('debtPrincipal').value),
+            annualRate: parseFloat(document.getElementById('debtRate').value),
+            originalTerm: parseInt(document.getElementById('debtTerm').value),
+            remainingMonths: parseInt(document.getElementById('debtTerm').value),
+            created: new Date().toISOString(),
+            lumpSumPayments: [],
+            emi: 0
+        };
+        if (!newDebt.name || isNaN(newDebt.principal) || isNaN(newDebt.annualRate) || isNaN(newDebt.originalTerm)) {
+            alert('Please fill all fields correctly.');
+            return;
+        }
+        newDebt.emi = calculateEMI(newDebt.principal, newDebt.annualRate, newDebt.originalTerm);
+        debts.push(newDebt);
+        saveDebts();
+        renderDebts();
+        hideAddDebtModal();
+    }
+    function renderDebts() {
+        const debtList = document.getElementById('debt-list');
+        debtList.innerHTML = debts.length ? debts.map(debt => `
+        <div class="debt-card">
+          <div onclick="selectDebt(${debt.id})">
+            <div class="debt-name">${debt.name}</div>
+            <div class="debt-detail">Balance: ₹${debt.currentBalance.toFixed(2)}</div>
+            <div class="debt-detail">EMI: ₹${debt.emi.toFixed(2)}</div>
+            <div class="debt-detail">Remaining: ${debt.remainingMonths} months</div>
+          </div>
+          <button class="delete-btn" onclick="removeDebt(${debt.id}, event)">×</button>
+        </div>
+      `).join('') : '<p style="text-align: center; color: #7f8c8d;">No debts added yet.</p>';
+    }
+    function removeDebt(debtId, event) {
+        event.stopPropagation();
+        debts = debts.filter(d => d.id !== debtId);
+        saveDebts();
+        renderDebts();
+        if (selectedDebt && selectedDebt.id === debtId) {
+            selectedDebt = null;
+            document.getElementById('selected-debt').innerHTML = '';
+        }
+    }
+    function selectDebt(debtId) {
+        selectedDebt = debts.find(d => d.id === debtId);
+        renderSelectedDebt();
+    }
+    function renderSelectedDebt() {
+        const container = document.getElementById('selected-debt');
+        if (!selectedDebt) {
+            container.innerHTML = '';
+            return;
+        }
+        const { schedule, totals } = generateAmortizationSchedule();
+        container.innerHTML = `
+        <div class="debt-card">
+          <div class="debt-name">${selectedDebt.name}</div>
+          <div class="debt-detail">Principal: ₹${selectedDebt.principal.toFixed(2)}</div>
+          <div class="debt-detail">Current Balance: ₹${selectedDebt.currentBalance.toFixed(2)}</div>
+          <div class="debt-detail">EMI: ₹${selectedDebt.emi.toFixed(2)}</div>
+          <div class="debt-detail">Remaining: ${selectedDebt.remainingMonths} months</div>
+          <div class="debt-detail">Total Interest: ₹${totals.interest.toFixed(2)}</div>
+          <div class="debt-detail">Total Payments: ₹${totals.payments.toFixed(2)}</div>
+          <div class="lumpsum-section">
+            <h3 style="margin-bottom: 1rem;">Make Lumpsum Payment</h3>
+            <input type="number" placeholder="Amount" id="lumpsumAmount">
+            <input type="date" id="lumpsumDate" style="margin: 0.8rem 0;">
+            <select id="lumpsumOption" style="margin-bottom: 1rem;">
+              <option value="reduceEMI">Reduce EMI</option>
+              <option value="reduceTerm">Reduce Tenure</option>
+            </select>
+            <button onclick="applyLumpsum()" style="background: #2ecc71; color: white; width: 100%;">
+              Apply Payment
+            </button>
+            ${selectedDebt.lumpSumPayments.length ? `
+              <div class="payment-history">
+                <h4 style="margin-bottom: 1rem;">Payment History</h4>
+                ${selectedDebt.lumpSumPayments.map(p => `
+                  <div class="payment-item">
+                    ₹${p.amount.toFixed(2)} on ${new Date(p.date).toLocaleDateString()}
+                    (${p.option === 'reduceEMI' ? 'EMI Reduced' : 'Tenure Reduced'})
+                  </div>
+                `).join('')}
+              </div>` : ''}
+          </div>
+          <button onclick="generateChart()" style="background: #3498db; color: white; width: 100%; margin: 1.5rem 0;">
+            Show Payment Breakdown
+          </button>
+          <div class="chart-container">
+                <canvas id="emiChart"></canvas>
+           </div>
+          <div class="table-container">
+            <span class="close-btn" onclick="document.getElementById('selected-debt').innerHTML = ''">×</span>
+            <table class="emi-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${schedule.map(p => `
+                  <tr>
+                    <td>${p.month}</td>
+                    <td>₹${p.principal.toFixed(2)}</td>
+                    <td>₹${p.interest.toFixed(2)}</td>
+                    <td>₹${p.balance.toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+    function applyLumpsum() {
+        const amount = parseFloat(document.getElementById('lumpsumAmount').value);
+        const date = document.getElementById('lumpsumDate').value;
+        const option = document.getElementById('lumpsumOption').value;
+        if (!amount || !date || amount > selectedDebt.currentBalance || amount <= 0) {
+            alert('Invalid payment details');
+            return;
+        }
+        selectedDebt.lumpSumPayments.push({ amount, date, option });
+        selectedDebt.currentBalance -= amount;
+        if (option === 'reduceEMI') {
+            selectedDebt.emi = calculateEMI(selectedDebt.currentBalance, selectedDebt.annualRate, selectedDebt.remainingMonths);
+        } else {
+            selectedDebt.remainingMonths = calculateRemainingMonths(selectedDebt.currentBalance, selectedDebt.annualRate, selectedDebt.emi);
+        }
+        saveDebts();
+        renderSelectedDebt();
+        generateChart();
+    }
+
+    // Chart Utility Functions
+    function getChartOptions() {
+        const darkMode = document.body.classList.contains('dark-mode');
+        const tickColor = darkMode ? '#ecf0f1' : '#2c3e50';
+        const gridColor = darkMode ? '#7f8c8d' : '#ecf0f1';
+        const tooltipBg = darkMode ? '#34495e' : '#fff';
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: tickColor }
+                },
+                tooltip: {
+                    backgroundColor: tooltipBg,
+                    titleColor: tickColor,
+                    bodyColor: tickColor,
+                    borderColor: gridColor,
+                    borderWidth: 1
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: tickColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: tickColor },
+                    grid: { color: gridColor, borderDash: [2, 2] },
+                    beginAtZero: true
+                }
+            }
+        };
+    }
+
+    // New function added for light mode chart options
+    function getLightChartOptions() {
+        const tickColor = '#2c3e50';
+        const gridColor = '#ecf0f1';
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: tickColor }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: tickColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: tickColor },
+                    grid: { color: gridColor, borderDash: [2, 2] },
+                    beginAtZero: true
+                }
+            }
+        };
+    }
+
+    function generateChart() {
+        if (chartInstance) chartInstance.destroy();
+        const { schedule } = generateAmortizationSchedule();
+        const ctx = document.getElementById('emiChart').getContext('2d');
+        const darkMode = document.body.classList.contains('dark-mode');
+        const tickColor = darkMode ? '#ecf0f1' : '#2c3e50';
+        const gridColor = darkMode ? '#7f8c8d' : '#ecf0f1';
+        chartInstance = new Chart(ctx, {
+            type: 'bar', // Base type is bar, overridden per dataset
+            data: {
+                labels: schedule.map(s => `Month ${s.month}`),
+                datasets: [
+                    {
+                        label: 'Principal',
+                        data: schedule.map(p => p.principal),
+                        backgroundColor: '#2ecc71', // Green for principal
+                        type: 'bar',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Interest',
+                        data: schedule.map(p => p.interest),
+                        backgroundColor: '#e74c3c', // Red for interest
+                        type: 'bar',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Balance',
+                        data: schedule.map(p => p.balance),
+                        borderColor: '#3498db', // Blue for balance
+                        type: 'line',
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Debt Payment Breakdown',
+                        color: tickColor,
+                        font: { size: 16 }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: { color: tickColor }
+                    },
+                    tooltip: {
+                        backgroundColor: darkMode ? '#34495e' : '#fff',
+                        titleColor: tickColor,
+                        bodyColor: tickColor,
+                        borderColor: gridColor,
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: tickColor },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        stacked: true,
+                        position: 'left',
+                        ticks: { color: tickColor },
+                        grid: { color: gridColor, borderDash: [2, 2] },
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Payment (₹)',
+                            color: tickColor
+                        }
+                    },
+                    y1: {
+                        position: 'right',
+                        ticks: { color: tickColor },
+                        grid: { display: false }, // Avoid overlapping grids
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Balance (₹)',
+                            color: tickColor
+                        }
+                    }
+                }
+            }
+        });
+    }
+    // function generateChart() {
+    //     // Destroy any existing chart instance to prevent overlap
+    //     if (typeof chartInstance !== 'undefined' && chartInstance) {
+    //         chartInstance.destroy();
+    //     }
+    //
+    //     // Retrieve the amortization schedule data
+    //     const { schedule } = generateAmortizationSchedule();
+    //
+    //     // Get the canvas context
+    //     const ctx = document.getElementById('emiChart').getContext('2d');
+    //
+    //     // Determine theme colors based on dark mode
+    //     const darkMode = document.body.classList.contains('dark-mode');
+    //     const tickColor = darkMode ? '#ecf0f1' : '#2c3e50';
+    //     const gridColor = darkMode ? '#7f8c8d' : '#ecf0f1';
+    //
+    //     // Create a new Chart instance
+    //     const emiChart = new Chart(ctx, {
+    //         type: 'bar', // Base chart type is bar
+    //         data: {
+    //             // Generate labels dynamically from the schedule (e.g., "Month 1", "Month 2", ...)
+    //             labels: schedule.map(s => `Month ${s.month}`),
+    //             datasets: [
+    //                 {
+    //                     label: 'Principal',
+    //                     data: schedule.map(p => p.principal), // Principal amounts from schedule
+    //                     backgroundColor: '#2ecc71', // Green for principal
+    //                     type: 'bar',
+    //                     yAxisID: 'y'
+    //                 },
+    //                 {
+    //                     label: 'Interest',
+    //                     data: schedule.map(p => p.interest), // Interest amounts from schedule
+    //                     backgroundColor: '#e74c3c', // Red for interest
+    //                     type: 'bar',
+    //                     yAxisID: 'y'
+    //                 },
+    //                 {
+    //                     label: 'Balance',
+    //                     data: schedule.map(p => p.balance), // Balance amounts from schedule
+    //                     borderColor: '#3498db', // Blue for balance line
+    //                     type: 'line',
+    //                     tension: 0.3, // Slight curve for the line
+    //                     fill: false, // No fill under the line
+    //                     yAxisID: 'y1'
+    //                 }
+    //             ]
+    //         },
+    //         options: {
+    //             responsive: true, // Chart adapts to container size
+    //             maintainAspectRatio: false, // Allows chart to fill container height
+    //             animation: {
+    //                 duration: 1000, // Animation duration in milliseconds
+    //                 easing: 'easeOutQuart' // Smooth animation effect
+    //             },
+    //             plugins: {
+    //                 title: {
+    //                     display: true,
+    //                     text: 'Debt Payment Breakdown',
+    //                     color: tickColor,
+    //                     font: { size: 16 }
+    //                 },
+    //                 legend: {
+    //                     position: 'top',
+    //                     labels: { color: tickColor }
+    //                 },
+    //                 tooltip: {
+    //                     backgroundColor: darkMode ? '#34495e' : '#fff',
+    //                     titleColor: tickColor,
+    //                     bodyColor: tickColor,
+    //                     borderColor: gridColor,
+    //                     borderWidth: 1
+    //                 }
+    //             },
+    //             scales: {
+    //                 x: {
+    //                     stacked: true, // Stack bars horizontally
+    //                     ticks: { color: tickColor },
+    //                     grid: { color: gridColor }
+    //                 },
+    //                 y: {
+    //                     stacked: true, // Stack principal and interest bars vertically
+    //                     position: 'left',
+    //                     ticks: { color: tickColor },
+    //                     grid: { color: gridColor, borderDash: [2, 2] }, // Dashed grid lines
+    //                     beginAtZero: true,
+    //                     title: {
+    //                         display: true,
+    //                         text: 'Payment (₹)',
+    //                         color: tickColor
+    //                     }
+    //                 },
+    //                 y1: {
+    //                     position: 'right', // Separate axis for balance
+    //                     ticks: { color: tickColor },
+    //                     grid: { display: false }, // No grid lines for balance axis
+    //                     beginAtZero: true,
+    //                     title: {
+    //                         display: true,
+    //                         text: 'Balance (₹)',
+    //                         color: tickColor
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     });
+    //
+    //     // Assign the chart instance to a global variable for later destruction
+    //     window.chartInstance = emiChart;
+    // }
+
+    // Analysis Functions
+    function showAnalysisModal() {
+        if (debts.length === 0) {
+            alert('Please add at least one debt to analyze.');
+            return;
+        }
+        document.getElementById('analysisModal').style.display = 'flex';
+        document.getElementById('totalMonthlyPayment').value = debts.reduce((sum, debt) => sum + debt.emi, 0).toFixed(2);
+    }
+    function hideAnalysisModal() {
+        document.getElementById('analysisModal').style.display = 'none';
+    }
+    function performAnalysis() {
+        const totalMonthlyPayment = parseFloat(document.getElementById('totalMonthlyPayment').value);
+        if (isNaN(totalMonthlyPayment) || totalMonthlyPayment <= 0) {
+            alert('Please enter a valid total monthly payment.');
+            return;
+        }
+        const minTotalPayment = debts.reduce((sum, debt) => sum + debt.emi, 0);
+        if (totalMonthlyPayment < minTotalPayment) {
+            alert(`Total monthly payment must be at least ₹${minTotalPayment.toFixed(2)} (sum of all EMIs).`);
+            return;
+        }
+        const avalancheResult = simulateDebtPayoff(debts, totalMonthlyPayment, 'avalanche');
+        const snowballResult = simulateDebtPayoff(debts, totalMonthlyPayment, 'snowball');
+        renderAnalysisResults(avalancheResult, snowballResult);
+    }
+    function simulateDebtPayoff(debts, totalMonthlyPayment, method) {
+        let remainingDebts = JSON.parse(JSON.stringify(debts));
+        if (method === 'avalanche') {
+            remainingDebts.sort((a, b) => b.annualRate - a.annualRate);
+        } else if (method === 'snowball') {
+            remainingDebts.sort((a, b) => a.currentBalance - b.currentBalance);
+        }
+        let month = 0;
+        let totalInterestPaid = 0;
+        let schedule = [];
+        while (remainingDebts.some(debt => debt.currentBalance > 0) && month < 1000) {
+            month++;
+            remainingDebts.forEach(debt => {
+                if (debt.currentBalance > 0) {
+                    const monthlyRate = debt.annualRate / 12 / 100;
+                    const interest = debt.currentBalance * monthlyRate;
+                    totalInterestPaid += interest;
+                    if (debt.emi >= interest) {
+                        const principalPayment = debt.emi - interest;
+                        debt.currentBalance -= principalPayment;
+                    } else {
+                        const unpaidInterest = interest - debt.emi;
+                        debt.currentBalance += unpaidInterest;
+                    }
+                    if (debt.currentBalance < 0) debt.currentBalance = 0;
+                }
+            });
+            const sumOfEmis = remainingDebts.reduce((sum, debt) =>
+                debt.currentBalance > 0 ? sum + debt.emi : sum, 0);
+            let extraPayment = totalMonthlyPayment - sumOfEmis;
+            if (extraPayment > 0) {
+                let targetDebt = remainingDebts.find(debt => debt.currentBalance > 0);
+                if (targetDebt) {
+                    const extraPrincipal = Math.min(extraPayment, targetDebt.currentBalance);
+                    targetDebt.currentBalance -= extraPrincipal;
+                }
+            }
+            remainingDebts = remainingDebts.filter(debt => debt.currentBalance > 0);
+            const totalBalance = remainingDebts.reduce((sum, debt) => sum + debt.currentBalance, 0);
+            schedule.push({ month, totalBalance });
+        }
+        return {
+            schedule,
+            totalInterestPaid,
+            months: month
+        };
+    }
+    function renderAnalysisResults(avalancheResult, snowballResult) {
+        const resultsDiv = document.getElementById('analysisResults');
+        resultsDiv.innerHTML = `
+        <div class="analysis-section">
+          <h3>Avalanche Method</h3>
+          <p>Total Interest Paid: ₹${avalancheResult.totalInterestPaid.toFixed(2)}</p>
+          <p>Time to Pay Off: ${avalancheResult.months} months</p>
+          <canvas id="avalancheChart" class="analysis-chart"></canvas>
+        </div>
+        <div class="analysis-section">
+          <h3>Snowball Method</h3>
+          <p>Total Interest Paid: ₹${snowballResult.totalInterestPaid.toFixed(2)}</p>
+          <p>Time to Pay Off: ${snowballResult.months} months</p>
+          <canvas id="snowballChart" class="analysis-chart"></canvas>
+        </div>
+      `;
+        renderAnalysisChart('avalancheChart', avalancheResult.schedule, '#e74c3c');
+        renderAnalysisChart('snowballChart', snowballResult.schedule, '#2ecc71');
+    }
+
+    // Updated function to use light mode options
+    function renderAnalysisChart(canvasId, schedule, color) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: schedule.map(s => `Month ${s.month}`),
+                datasets: [{
+                    label: 'Total Debt Balance',
+                    data: schedule.map(s => s.totalBalance),
+                    borderColor: color,
+                    backgroundColor: `${color}33`,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: getChartOptions() // Updated to use enhanced options
+        });
+    }
+
+    // Screen Navigation
+    function showScreen(screenId, event) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+        document.getElementById(screenId).classList.add('active-screen');
+        document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    // Initialization
+    loadDebts();
+    renderDebts();
+</script>
+</body>
+</html>
