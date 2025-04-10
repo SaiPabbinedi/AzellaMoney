@@ -483,12 +483,6 @@
     </div>
 </div>
 
-<!-- Navigation Bar -->
-<!--<div class="nav-bar">-->
-<!--    <div class="nav-button active" onclick="showScreen('debt-screen', event)">Debts</div>-->
-<!--    <div class="nav-button" onclick="showScreen('screen2', event)">Analytics</div>-->
-<!--    <div class="nav-button" onclick="showScreen('screen3', event)">History</div>-->
-<!--</div>-->
 <div class="nav-bar">
     <a href="DashboardPage.html" class="nav-button">Dashboard</a>
     <a href="#" class="nav-button active">Debt</a>
@@ -869,117 +863,6 @@
             }
         });
     }
-    // function generateChart() {
-    //     // Destroy any existing chart instance to prevent overlap
-    //     if (typeof chartInstance !== 'undefined' && chartInstance) {
-    //         chartInstance.destroy();
-    //     }
-    //
-    //     // Retrieve the amortization schedule data
-    //     const { schedule } = generateAmortizationSchedule();
-    //
-    //     // Get the canvas context
-    //     const ctx = document.getElementById('emiChart').getContext('2d');
-    //
-    //     // Determine theme colors based on dark mode
-    //     const darkMode = document.body.classList.contains('dark-mode');
-    //     const tickColor = darkMode ? '#ecf0f1' : '#2c3e50';
-    //     const gridColor = darkMode ? '#7f8c8d' : '#ecf0f1';
-    //
-    //     // Create a new Chart instance
-    //     const emiChart = new Chart(ctx, {
-    //         type: 'bar', // Base chart type is bar
-    //         data: {
-    //             // Generate labels dynamically from the schedule (e.g., "Month 1", "Month 2", ...)
-    //             labels: schedule.map(s => `Month ${s.month}`),
-    //             datasets: [
-    //                 {
-    //                     label: 'Principal',
-    //                     data: schedule.map(p => p.principal), // Principal amounts from schedule
-    //                     backgroundColor: '#2ecc71', // Green for principal
-    //                     type: 'bar',
-    //                     yAxisID: 'y'
-    //                 },
-    //                 {
-    //                     label: 'Interest',
-    //                     data: schedule.map(p => p.interest), // Interest amounts from schedule
-    //                     backgroundColor: '#e74c3c', // Red for interest
-    //                     type: 'bar',
-    //                     yAxisID: 'y'
-    //                 },
-    //                 {
-    //                     label: 'Balance',
-    //                     data: schedule.map(p => p.balance), // Balance amounts from schedule
-    //                     borderColor: '#3498db', // Blue for balance line
-    //                     type: 'line',
-    //                     tension: 0.3, // Slight curve for the line
-    //                     fill: false, // No fill under the line
-    //                     yAxisID: 'y1'
-    //                 }
-    //             ]
-    //         },
-    //         options: {
-    //             responsive: true, // Chart adapts to container size
-    //             maintainAspectRatio: false, // Allows chart to fill container height
-    //             animation: {
-    //                 duration: 1000, // Animation duration in milliseconds
-    //                 easing: 'easeOutQuart' // Smooth animation effect
-    //             },
-    //             plugins: {
-    //                 title: {
-    //                     display: true,
-    //                     text: 'Debt Payment Breakdown',
-    //                     color: tickColor,
-    //                     font: { size: 16 }
-    //                 },
-    //                 legend: {
-    //                     position: 'top',
-    //                     labels: { color: tickColor }
-    //                 },
-    //                 tooltip: {
-    //                     backgroundColor: darkMode ? '#34495e' : '#fff',
-    //                     titleColor: tickColor,
-    //                     bodyColor: tickColor,
-    //                     borderColor: gridColor,
-    //                     borderWidth: 1
-    //                 }
-    //             },
-    //             scales: {
-    //                 x: {
-    //                     stacked: true, // Stack bars horizontally
-    //                     ticks: { color: tickColor },
-    //                     grid: { color: gridColor }
-    //                 },
-    //                 y: {
-    //                     stacked: true, // Stack principal and interest bars vertically
-    //                     position: 'left',
-    //                     ticks: { color: tickColor },
-    //                     grid: { color: gridColor, borderDash: [2, 2] }, // Dashed grid lines
-    //                     beginAtZero: true,
-    //                     title: {
-    //                         display: true,
-    //                         text: 'Payment (₹)',
-    //                         color: tickColor
-    //                     }
-    //                 },
-    //                 y1: {
-    //                     position: 'right', // Separate axis for balance
-    //                     ticks: { color: tickColor },
-    //                     grid: { display: false }, // No grid lines for balance axis
-    //                     beginAtZero: true,
-    //                     title: {
-    //                         display: true,
-    //                         text: 'Balance (₹)',
-    //                         color: tickColor
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     });
-    //
-    //     // Assign the chart instance to a global variable for later destruction
-    //     window.chartInstance = emiChart;
-    // }
 
     // Analysis Functions
     function showAnalysisModal() {

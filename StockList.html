@@ -1800,6 +1800,725 @@
 <!--&lt;!&ndash;</body>&ndash;&gt;-->
 <!--&lt;!&ndash;</html>&ndash;&gt;-->
 
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Trending Stocks - NSE (Alpha Vantage)</title>-->
+<!--    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap" rel="stylesheet">-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+<!--    <style>-->
+<!--        /* Updated styling to match the debt management UI */-->
+<!--        body {-->
+<!--            font-family: 'Roboto', sans-serif;-->
+<!--            background: #f0f2f5;-->
+<!--            margin: 0;-->
+<!--            padding: 0;-->
+<!--            color: #333;-->
+<!--            padding-bottom: 90px; /* ADDED: Space for bottom navigation bar */-->
+<!--        }-->
+<!--        header {-->
+<!--            background: #2c3e50;-->
+<!--            color: #fff;-->
+<!--            padding: 20px;-->
+<!--            text-align: left;-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--            flex-shrink: 0; /* Prevent header shrinking */-->
+<!--        }-->
+<!--        header h1 {-->
+<!--            margin: 0;-->
+<!--            font-size: 24px;-->
+<!--            font-weight: 500;-->
+<!--        }-->
+<!--        .toggle-btn {-->
+<!--            background: #3498db;-->
+<!--            color: white;-->
+<!--            border: none;-->
+<!--            padding: 8px 16px;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+<!--        .container {-->
+<!--            max-width: 1200px;-->
+<!--            margin: 0 auto;-->
+<!--            padding: 20px;-->
+<!--            flex-grow: 1; /* Allow container to grow */-->
+<!--            overflow-y: auto; /* Allow content scrolling if needed */-->
+<!--        }-->
+<!--        .section {-->
+<!--            background: #fff;-->
+<!--            padding: 20px;-->
+<!--            margin: 10px 0 20px 0;-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0 1px 3px rgba(0,0,0,0.1);-->
+<!--        }-->
+<!--        .section h2 {-->
+<!--            margin-top: 0;-->
+<!--            font-weight: 500;-->
+<!--            color: #2c3e50;-->
+<!--            font-size: 20px;-->
+<!--            padding-bottom: 10px;-->
+<!--            border-bottom: 1px solid #eee;-->
+<!--        }-->
+<!--        .stock-item {-->
+<!--            padding: 15px;-->
+<!--            border-bottom: 1px solid #eee;-->
+<!--            cursor: pointer;-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--        }-->
+<!--        .stock-item:hover {-->
+<!--            background: #f7f9fc;-->
+<!--        }-->
+<!--        .stock-info {-->
+<!--            display: flex;-->
+<!--            flex: 1;-->
+<!--            min-width: 0; /* Prevent overflow issues */-->
+<!--            align-items: center; /* Vertically align items */-->
+<!--        }-->
+<!--        .stock-info span {-->
+<!--            flex: 1;-->
+<!--            padding: 0 5px;-->
+<!--            white-space: nowrap; /* Prevent wrapping */-->
+<!--            overflow: hidden; /* Hide overflow */-->
+<!--            text-overflow: ellipsis; /* Add ellipsis */-->
+<!--        }-->
+<!--        /* Give symbol slightly more space */-->
+<!--        .stock-info span:first-child {-->
+<!--            flex: 1.2;-->
+<!--        }-->
+<!--        .delete-btn {-->
+<!--            background: #e74c3c;-->
+<!--            color: #fff;-->
+<!--            border: none;-->
+<!--            padding: 6px 12px;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--            margin-left: 10px;-->
+<!--            flex-shrink: 0; /* Prevent button from shrinking */-->
+<!--        }-->
+<!--        /* Form styling updated */-->
+<!--        form {-->
+<!--            display: flex;-->
+<!--            margin-bottom: 20px;-->
+<!--            flex-direction: column;-->
+<!--        }-->
+<!--        input[type="text"] {-->
+<!--            padding: 12px;-->
+<!--            border: 1px solid #ddd;-->
+<!--            border-radius: 4px;-->
+<!--            margin-bottom: 10px;-->
+<!--            font-size: 16px;-->
+<!--        }-->
+<!--        button[type="submit"] {-->
+<!--            padding: 12px 20px;-->
+<!--            border: none;-->
+<!--            background: #2ecc71;-->
+<!--            color: #fff;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--            font-size: 16px;-->
+<!--            margin-bottom: 10px;-->
+<!--        }-->
+<!--        /* Action buttons */-->
+<!--        .action-btn {-->
+<!--            display: block;-->
+<!--            width: 100%;-->
+<!--            padding: 12px 20px;-->
+<!--            margin: 10px 0;-->
+<!--            background: #3498db;-->
+<!--            color: white;-->
+<!--            border: none;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--            text-align: center;-->
+<!--            font-size: 16px;-->
+<!--        }-->
+<!--        .primary-btn { background: #2ecc71; }-->
+<!--        .secondary-btn { background: #3498db; }-->
+
+<!--        /* Existing Navbar - POTENTIALLY REDUNDANT */-->
+<!--        .navbar {-->
+<!--            display: flex;-->
+<!--            background: #fff;-->
+<!--            border-radius: 8px;-->
+<!--            overflow: hidden;-->
+<!--            margin-top: 20px;-->
+<!--        }-->
+<!--        .nav-item {-->
+<!--            flex: 1;-->
+<!--            text-align: center;-->
+<!--            padding: 12px;-->
+<!--            cursor: pointer;-->
+<!--            background: #f0f2f5;-->
+<!--            color: #333; /* Added text color */-->
+<!--            transition: background-color 0.2s, color 0.2s; /* Added transition */-->
+<!--        }-->
+<!--        .nav-item.active {-->
+<!--            background: #3498db;-->
+<!--            color: white;-->
+<!--        }-->
+<!--        /* End Existing Navbar */-->
+
+<!--        /* Overlay styling */-->
+<!--        .overlay {-->
+<!--            position: fixed;-->
+<!--            top: 0;-->
+<!--            left: 0;-->
+<!--            width: 100%;-->
+<!--            height: 100%;-->
+<!--            background: rgba(0,0,0,0.7);-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: center;-->
+<!--            visibility: hidden;-->
+<!--            opacity: 0;-->
+<!--            transition: opacity 0.3s, visibility 0.3s;-->
+<!--            z-index: 1000; /* Above everything except maybe float button if needed */-->
+<!--        }-->
+<!--        .overlay.active {-->
+<!--            visibility: visible;-->
+<!--            opacity: 1;-->
+<!--        }-->
+<!--        .overlay-content {-->
+<!--            background: #fff;-->
+<!--            padding: 20px;-->
+<!--            border-radius: 8px;-->
+<!--            width: 90%;-->
+<!--            max-width: 800px;-->
+<!--            position: relative;-->
+<!--            max-height: 90vh;-->
+<!--            overflow-y: auto;-->
+<!--        }-->
+<!--        .close-btn {-->
+<!--            position: absolute;-->
+<!--            top: 10px;-->
+<!--            right: 10px;-->
+<!--            background: #95a5a6;-->
+<!--            color: #fff;-->
+<!--            border: none;-->
+<!--            padding: 6px 12px;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--        }-->
+<!--        canvas {-->
+<!--            max-width: 100%;-->
+<!--            height: auto;-->
+<!--            margin-top: 20px;-->
+<!--        }-->
+<!--        .positive { color: #2ecc71; font-weight: 500; }-->
+<!--        .negative { color: #e74c3c; font-weight: 500; }-->
+<!--        .message { text-align: center; color: #7f8c8d; padding: 20px; }-->
+<!--        .action-buttons { display: flex; margin-top: 20px; gap: 10px; }-->
+<!--        .action-buttons button { flex: 1; }-->
+
+<!--        /* Float button */-->
+<!--        .float-btn {-->
+<!--            position: fixed;-->
+<!--            bottom: 80px; /* ADJUSTED: Position above nav bar */-->
+<!--            right: 20px;-->
+<!--            background: #3498db;-->
+<!--            color: white;-->
+<!--            border: none;-->
+<!--            border-radius: 50px;-->
+<!--            padding: 12px 20px;-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            box-shadow: 0 2px 10px rgba(0,0,0,0.2);-->
+<!--            cursor: pointer;-->
+<!--            z-index: 1001; /* ADJUSTED: Above overlay and nav bar */-->
+<!--        }-->
+<!--        .float-btn span { margin-left: 8px; }-->
+
+<!--        /* -&#45;&#45; ADDED: Bottom Navigation Bar Styles -&#45;&#45; */-->
+<!--        .nav-bar {-->
+<!--            position: fixed; /* Fixed position at the bottom */-->
+<!--            bottom: 0;-->
+<!--            left: 0;-->
+<!--            right: 0;-->
+<!--            background: #fff; /* White background */-->
+<!--            display: flex;-->
+<!--            justify-content: space-around;-->
+<!--            padding: 1rem 0;-->
+<!--            box-shadow: 0 -4px 12px rgba(0,0,0,0.08); /* Shadow above the bar */-->
+<!--            z-index: 999; /* Below overlay (1000) and float btn (1001) */-->
+<!--        }-->
+<!--        .nav-button {-->
+<!--            text-decoration: none; /* Remove underline from links */-->
+<!--            padding: 0.6rem 1rem; /* Adjust padding */-->
+<!--            border-radius: 8px; /* Match existing style */-->
+<!--            cursor: pointer;-->
+<!--            color: #7f8c8d; /* Default text color */-->
+<!--            transition: all 0.2s;-->
+<!--            font-size: 13px; /* Adjust font size */-->
+<!--            display: flex;-->
+<!--            flex-direction: column;-->
+<!--            align-items: center;-->
+<!--            justify-content: center;-->
+<!--            flex: 1; /* Allow buttons to take up space */-->
+<!--            text-align: center; /* Center text */-->
+<!--            min-width: 0; /* Prevent overflow on small screens */-->
+<!--        }-->
+<!--        .nav-button.active {-->
+<!--            background: #3498db; /* Active button background */-->
+<!--            color: white; /* Active button text color */-->
+<!--            box-shadow: 0 4px 12px rgba(52,152,219,0.2); /* Optional shadow */-->
+<!--        }-->
+<!--        /* -&#45;&#45; End Bottom Navigation Bar Styles -&#45;&#45; */-->
+
+<!--        /* Responsive adjustments */-->
+<!--        @media (max-width: 600px) {-->
+<!--            header { padding: 15px; }-->
+<!--            header h1 { font-size: 20px; }-->
+<!--            .container { padding: 15px; }-->
+<!--            .stock-info span { font-size: 14px; }-->
+<!--            .delete-btn { padding: 4px 8px; font-size: 12px; }-->
+<!--            .float-btn { bottom: 75px; padding: 10px 15px; font-size: 14px; } /* Adjust float btn */-->
+<!--            .nav-button { padding: 0.5rem 0.5rem; font-size: 11px; } /* Adjust bottom nav */-->
+<!--            body { padding-bottom: 80px; } /* Ensure padding for smaller nav */-->
+<!--        }-->
+
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<header>-->
+<!--    <h1>Stock Tracker</h1>-->
+<!--    <button class="toggle-btn">Toggle Theme</button>-->
+<!--</header>-->
+
+<!--<div class="container">-->
+<!--    <div class="section" id="trendingSection">-->
+<!--        <h2>Trending Stocks</h2>-->
+<!--        <div id="trendingList"><div class="message">Loading trending stocks...</div></div>-->
+<!--    </div>-->
+<!--    <div class="section" id="favoriteSection">-->
+<!--        <h2>Favorite Stocks</h2>-->
+<!--        <form id="favoriteForm">-->
+<!--            <input type="text" id="favoriteInput" placeholder="Enter NSE symbol (e.g. TCS.NS)" required>-->
+<!--            <button type="submit" class="primary-btn">Add Stock</button>-->
+<!--        </form>-->
+<!--        <div id="favoriteList"><div class="message">No favorite stocks added yet.</div></div>-->
+<!--        <button class="action-btn secondary-btn" id="showAnalysisBtn">Show Analytics</button>-->
+<!--    </div>-->
+
+<!--    <div class="navbar">-->
+<!--        <div class="nav-item active">Stocks</div>-->
+<!--        <div class="nav-item">Analytics</div>-->
+<!--        <div class="nav-item">History</div>-->
+<!--    </div>-->
+<!--</div> <button class="float-btn">-->
+<!--    +-->
+<!--    <span>Add Stock</span>-->
+<!--</button>-->
+<!--<div class="overlay" id="overlay">-->
+<!--    <div class="overlay-content">-->
+<!--        <button class="close-btn" id="closeOverlay">Close</button>-->
+<!--        <div id="stockDetails"><div class="message">Loading details...</div></div>-->
+<!--        <canvas id="stockChart"></canvas>-->
+<!--        <div class="action-buttons">-->
+<!--            <button class="action-btn primary-btn" id="analyzeBtn">Analyze Strategy</button>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+<!--<div class="nav-bar">-->
+<!--    <a href="DashboardPage.html" class="nav-button">Dashboard</a>-->
+<!--    <a href="DebtClearance.html" class="nav-button">Debt</a>-->
+<!--    <a href="#" class="nav-button active">Stock</a>-->
+<!--    <a href="UserPage.html" class="nav-button">User Profile</a>-->
+<!--</div>-->
+<!--<script>-->
+<!--    // -&#45;&#45; Configuration -&#45;&#45;-->
+<!--    const apiKey = 'N2LLNLUWOB3TCE3X'; // Your provided Alpha Vantage API key-->
+<!--    // Note: Alpha Vantage free tier limitations apply.-->
+<!--    let trendingSymbols = ["TCS.NS", "RELIANCE.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS"];-->
+<!--    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];-->
+<!--    let chartInstance = null;-->
+
+<!--    // -&#45;&#45; DOM Elements -&#45;&#45;-->
+<!--    const trendingListContainer = document.getElementById("trendingList");-->
+<!--    const favoriteListContainer = document.getElementById("favoriteList");-->
+<!--    const favoriteForm = document.getElementById("favoriteForm");-->
+<!--    const favoriteInput = document.getElementById("favoriteInput");-->
+<!--    const overlay = document.getElementById("overlay");-->
+<!--    const closeOverlayBtn = document.getElementById("closeOverlay");-->
+<!--    const stockDetailsContainer = document.getElementById("stockDetails");-->
+<!--    const stockChartCanvas = document.getElementById("stockChart").getContext('2d'); // Get context directly-->
+<!--    const toggleThemeBtn = document.querySelector(".toggle-btn");-->
+<!--    const showAnalysisBtn = document.getElementById("showAnalysisBtn");-->
+<!--    const analyzeBtn = document.getElementById("analyzeBtn");-->
+<!--    const floatBtn = document.querySelector(".float-btn");-->
+<!--    const navItems = document.querySelectorAll(".nav-item"); // Existing top nav items-->
+
+<!--    // -&#45;&#45; API Functions -&#45;&#45;-->
+<!--    async function fetchStockData(symbols, callback) {-->
+<!--        if (apiKey === 'YOUR_API_KEY' || !apiKey) { // Added check for empty key-->
+<!--            console.error("API Key not set. Please replace 'YOUR_API_KEY'.");-->
+<!--            callback(null, "API Key not configured.");-->
+<!--            return;-->
+<!--        }-->
+<!--        if (!symbols || symbols.length === 0) {-->
+<!--            callback([]); // Return empty array if no symbols-->
+<!--            return;-->
+<!--        }-->
+
+<!--        const promises = symbols.map(async (symbol) => { // Added async here-->
+<!--            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;-->
+<!--            try {-->
+<!--                const response = await fetch(url);-->
+<!--                if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${symbol}`);-->
+<!--                const data = await response.json();-->
+
+<!--                // Check for API call frequency limit note-->
+<!--                if (data.Note) {-->
+<!--                    console.warn(`API Note for ${symbol}: ${data.Note}`);-->
+<!--                    // You might want to handle this, e.g., by delaying the next request-->
+<!--                    await new Promise(resolve => setTimeout(resolve, 15000)); // Wait 15s if hitting limit-->
+<!--                    // Retry fetch after delay-->
+<!--                    const retryResponse = await fetch(url);-->
+<!--                    if (!retryResponse.ok) throw new Error(`HTTP error! status: ${retryResponse.status} for ${symbol} (after retry)`);-->
+<!--                    const retryData = await retryResponse.json();-->
+<!--                    if (retryData.Note) { // Still hitting limit after retry-->
+<!--                        throw new Error(`API rate limit hit for ${symbol} even after delay.`);-->
+<!--                    }-->
+<!--                    if (retryData['Error Message'] || !retryData['Global Quote'] || Object.keys(retryData['Global Quote']).length === 0) {-->
+<!--                        console.warn(`No data or error for symbol ${symbol} (after retry):`, retryData['Error Message'] || 'Empty quote');-->
+<!--                        return null;-->
+<!--                    }-->
+<!--                    const quote = retryData['Global Quote'];-->
+<!--                    return mapQuoteData(quote); // Use helper function-->
+<!--                }-->
+
+<!--                if (data['Error Message'] || !data['Global Quote'] || Object.keys(data['Global Quote']).length === 0) {-->
+<!--                    console.warn(`No data or error for symbol ${symbol}:`, data['Error Message'] || 'Empty quote');-->
+<!--                    return null;-->
+<!--                }-->
+<!--                const quote = data['Global Quote'];-->
+<!--                return mapQuoteData(quote); // Use helper function-->
+
+<!--            } catch (error) {-->
+<!--                console.error(`Failed to fetch data for ${symbol}:`, error);-->
+<!--                return null;-->
+<!--            }-->
+<!--        });-->
+
+<!--        try {-->
+<!--            const results = await Promise.all(promises);-->
+<!--            const validResults = results.filter(result => result !== null);-->
+<!--            if (validResults.length === 0 && symbols.length > 0) {-->
+<!--                callback(null, "Failed to fetch data. Check API key, symbol format (e.g., TCS.NS), or rate limits.");-->
+<!--            } else {-->
+<!--                callback(validResults);-->
+<!--            }-->
+<!--        } catch (error) {-->
+<!--            console.error("Error processing stock data fetches:", error);-->
+<!--            callback(null, "An error occurred while fetching data.");-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Helper function to map Alpha Vantage quote data-->
+<!--    function mapQuoteData(quote) {-->
+<!--        return {-->
+<!--            symbol: quote['01. symbol'],-->
+<!--            longName: quote['01. symbol'], // Placeholder-->
+<!--            regularMarketPrice: parseFloat(quote['05. price']),-->
+<!--            regularMarketChange: parseFloat(quote['09. change']),-->
+<!--            regularMarketChangePercent: parseFloat(quote['10. change percent']?.replace('%', '') || '0'), // Safer parsing-->
+<!--            currency: 'INR' // Assumption-->
+<!--        };-->
+<!--    }-->
+
+<!--    function fetchHistoricalData(symbol, callback) {-->
+<!--        if (apiKey === 'YOUR_API_KEY' || !apiKey) {-->
+<!--            console.error("API Key not set.");-->
+<!--            callback(null, "API Key not configured.");-->
+<!--            return;-->
+<!--        }-->
+<!--        // Use compact for fewer data points (suitable for free tier)-->
+<!--        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=compact&apikey=${apiKey}`;-->
+
+<!--        fetch(url)-->
+<!--            .then(res => {-->
+<!--                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);-->
+<!--                return res.json();-->
+<!--            })-->
+<!--            .then(data => {-->
+<!--                if (data.Note) { // Handle API limit note-->
+<!--                    console.warn(`API Note for ${symbol} (Historical): ${data.Note}`);-->
+<!--                    throw new Error("API rate limit likely hit fetching historical data.");-->
+<!--                }-->
+<!--                if (data['Error Message'] || !data['Time Series (Daily)']) {-->
+<!--                    throw new Error(data['Error Message'] || `Invalid historical data format for ${symbol}.`);-->
+<!--                }-->
+<!--                const timeSeries = data['Time Series (Daily)'];-->
+<!--                const timestamps = Object.keys(timeSeries).sort().slice(-30); // Get last ~30 days-->
+<!--                if (timestamps.length === 0) {-->
+<!--                    throw new Error(`No valid timestamps found in historical data for ${symbol}.`);-->
+<!--                }-->
+
+<!--                const prices = timestamps.map(date => parseFloat(timeSeries[date]['4. close']));-->
+<!--                const labels = timestamps.map(date => {-->
+<!--                    const [year, month, day] = date.split('-');-->
+<!--                    return `${day}/${month}`; // Format DD/MM-->
+<!--                });-->
+
+<!--                callback({ labels, prices });-->
+<!--            })-->
+<!--            .catch(error => {-->
+<!--                console.error(`Failed to fetch historical data for ${symbol}:`, error);-->
+<!--                callback(null, error.message || "Failed to fetch historical data.");-->
+<!--            });-->
+<!--    }-->
+
+<!--    // -&#45;&#45; Rendering Functions -&#45;&#45;-->
+<!--    function renderStocks(list, container, isFavorite = false, errorMessage = null) {-->
+<!--        container.innerHTML = ""; // Clear previous content-->
+
+<!--        if (errorMessage) {-->
+<!--            container.innerHTML = `<div class="message">${errorMessage}</div>`;-->
+<!--            return;-->
+<!--        }-->
+
+<!--        if (!list || list.length === 0) {-->
+<!--            const message = isFavorite ? "No favorite stocks added." : "No trending stocks available.";-->
+<!--            container.innerHTML = `<div class="message">${message}</div>`;-->
+<!--            return;-->
+<!--        }-->
+
+<!--        list.forEach(stock => {-->
+<!--            if (!stock || !stock.symbol) {-->
+<!--                console.warn("Skipping invalid stock data:", stock);-->
+<!--                return;-->
+<!--            }-->
+
+<!--            const div = document.createElement("div");-->
+<!--            div.className = "stock-item";-->
+<!--            div.setAttribute('data-symbol', stock.symbol);-->
+
+<!--            const changePercentVal = stock.regularMarketChangePercent;-->
+<!--            const priceVal = stock.regularMarketPrice;-->
+
+<!--            const changePercent = (typeof changePercentVal === 'number') ? changePercentVal.toFixed(2) + "%" : "N/A";-->
+<!--            const changeClass = (typeof changePercentVal === 'number') ? (changePercentVal > 0 ? "positive" : (changePercentVal < 0 ? "negative" : "")) : "";-->
+<!--            const price = (typeof priceVal === 'number') ? priceVal.toFixed(2) : "N/A";-->
+<!--            const currency = stock.currency || "";-->
+
+<!--            const stockInfo = document.createElement("div");-->
+<!--            stockInfo.className = "stock-info";-->
+<!--            // Ensure spans are created correctly-->
+<!--            stockInfo.innerHTML = `-->
+<!--                <span title="${stock.symbol}">${stock.symbol}</span>-->
+<!--                <span title="Price: ${price} ${currency}">${price} ${currency}</span>-->
+<!--                <span class="${changeClass}" title="Change: ${changePercent}">${changePercent}</span>-->
+<!--            `;-->
+
+<!--            div.appendChild(stockInfo);-->
+
+<!--            div.addEventListener("click", () => showOverlay(stock.symbol));-->
+
+<!--            if (isFavorite) {-->
+<!--                const delBtn = document.createElement("button");-->
+<!--                delBtn.className = "delete-btn";-->
+<!--                delBtn.innerText = "Delete";-->
+<!--                delBtn.addEventListener("click", (e) => {-->
+<!--                    e.stopPropagation();-->
+<!--                    removeFavorite(stock.symbol);-->
+<!--                });-->
+<!--                div.appendChild(delBtn);-->
+<!--            }-->
+
+<!--            container.appendChild(div);-->
+<!--        });-->
+<!--    }-->
+
+<!--    function showOverlay(symbol) {-->
+<!--        stockDetailsContainer.innerHTML = `<div class="message">Loading details for ${symbol}...</div>`;-->
+<!--        if (chartInstance) {-->
+<!--            chartInstance.destroy();-->
+<!--            chartInstance = null;-->
+<!--        }-->
+<!--        overlay.classList.add("active");-->
+
+<!--        fetchStockData([symbol], (data, error) => { // Fetch fresh data for the overlay-->
+<!--            if (error || !data || data.length === 0) {-->
+<!--                stockDetailsContainer.innerHTML = `<div class="message">Failed to load details for ${symbol}. ${error || 'No data found.'}</div>`;-->
+<!--                return;-->
+<!--            }-->
+
+<!--            const info = data[0];-->
+<!--            const changePercentVal = info.regularMarketChangePercent;-->
+<!--            const priceVal = info.regularMarketPrice;-->
+<!--            const changeVal = info.regularMarketChange;-->
+
+<!--            const changePercent = (typeof changePercentVal === 'number') ? changePercentVal.toFixed(2) + "%" : "N/A";-->
+<!--            const changeClass = (typeof changePercentVal === 'number') ? (changePercentVal > 0 ? "positive" : (changePercentVal < 0 ? "negative" : "")) : "";-->
+<!--            const price = (typeof priceVal === 'number') ? priceVal.toFixed(2) : "N/A";-->
+<!--            const change = (typeof changeVal === 'number') ? changeVal.toFixed(2) : "N/A";-->
+<!--            const currency = info.currency || "";-->
+<!--            const name = info.longName || info.symbol;-->
+
+<!--            const detailsHTML = `-->
+<!--                <h2>${name} (${info.symbol})</h2>-->
+<!--                <p><strong>Price:</strong> ${price} ${currency}</p>-->
+<!--                <p><strong>Change:</strong> ${change} (<span class="${changeClass}">${changePercent}</span>)</p>-->
+<!--                <hr>-->
+<!--                <p><em id="chart-loading-msg">Loading chart data...</em></p>-->
+<!--            `;-->
+<!--            stockDetailsContainer.innerHTML = detailsHTML;-->
+
+<!--            fetchHistoricalData(symbol, (histData, histError) => {-->
+<!--                const chartLoadingMsg = document.getElementById('chart-loading-msg');-->
+<!--                if (histError || !histData || !histData.labels || !histData.prices || histData.labels.length === 0) {-->
+<!--                    if(chartLoadingMsg) chartLoadingMsg.textContent = `Chart data unavailable. ${histError || 'No data points.'}`;-->
+<!--                    console.error("Failed to get historical data for chart:", histError || histData);-->
+<!--                    return;-->
+<!--                }-->
+
+<!--                if(chartLoadingMsg) chartLoadingMsg.style.display = 'none'; // Hide loading message-->
+
+<!--                if (chartInstance) { chartInstance.destroy(); } // Destroy previous before creating new-->
+
+<!--                try { // Add try-catch for chart creation-->
+<!--                    chartInstance = new Chart(stockChartCanvas, { // Use the context obtained earlier-->
+<!--                        type: "line",-->
+<!--                        data: {-->
+<!--                            labels: histData.labels,-->
+<!--                            datasets: [{-->
+<!--                                label: `${symbol} Closing Price`,-->
+<!--                                data: histData.prices,-->
+<!--                                borderColor: "#3498db",-->
+<!--                                backgroundColor: "rgba(52, 152, 219, 0.1)",-->
+<!--                                fill: true,-->
+<!--                                tension: 0.1,-->
+<!--                                pointRadius: 2, // Smaller points-->
+<!--                                pointHoverRadius: 4-->
+<!--                            }]-->
+<!--                        },-->
+<!--                        options: {-->
+<!--                            responsive: true,-->
+<!--                            maintainAspectRatio: true, // Maintain aspect ratio can be better-->
+<!--                            plugins: {-->
+<!--                                title: { display: true, text: `Recent Performance` },-->
+<!--                                legend: { display: false } // Hide legend if only one dataset-->
+<!--                            },-->
+<!--                            scales: { y: { beginAtZero: false } }-->
+<!--                        }-->
+<!--                    });-->
+<!--                } catch (chartError) {-->
+<!--                    console.error("Error creating chart:", chartError);-->
+<!--                    if(chartLoadingMsg) {-->
+<!--                        chartLoadingMsg.textContent = 'Failed to render chart.';-->
+<!--                        chartLoadingMsg.style.display = 'block';-->
+<!--                    }-->
+<!--                }-->
+<!--            });-->
+<!--        });-->
+<!--    }-->
+
+<!--    // -&#45;&#45; Favorite Management -&#45;&#45;-->
+<!--    function addFavorite(symbol) {-->
+<!--        // Basic validation for NSE symbols (e.g., ends with .NS)-->
+<!--        const upperSymbol = symbol.trim().toUpperCase();-->
+<!--        if (!upperSymbol) return; // Ignore empty input-->
+
+<!--        if (!upperSymbol.endsWith(".NS")) {-->
+<!--            alert("Please enter a valid NSE symbol ending with '.NS' (e.g., TCS.NS)");-->
+<!--            favoriteInput.focus(); // Keep focus on input-->
+<!--            return;-->
+<!--        }-->
+
+<!--        if (!favorites.includes(upperSymbol)) {-->
+<!--            favorites.push(upperSymbol);-->
+<!--            localStorage.setItem("favorites", JSON.stringify(favorites));-->
+<!--            loadFavorites(); // Refresh the list-->
+<!--        } else {-->
+<!--            alert(`${upperSymbol} is already in favorites.`);-->
+<!--        }-->
+<!--        favoriteInput.value = "";-->
+<!--    }-->
+
+<!--    function removeFavorite(symbol) {-->
+<!--        favorites = favorites.filter(fav => fav !== symbol);-->
+<!--        localStorage.setItem("favorites", JSON.stringify(favorites));-->
+<!--        loadFavorites();-->
+<!--    }-->
+
+<!--    // -&#45;&#45; Initial Load Functions -&#45;&#45;-->
+<!--    function loadTrending() {-->
+<!--        trendingListContainer.innerHTML = `<div class="message">Loading trending stocks...</div>`;-->
+<!--        // Use a smaller set for trending to reduce API calls if needed-->
+<!--        fetchStockData(trendingSymbols.slice(0, 5), (data, error) => {-->
+<!--            renderStocks(data, trendingListContainer, false, error);-->
+<!--        });-->
+<!--    }-->
+
+<!--    function loadFavorites() {-->
+<!--        if (favorites.length === 0) {-->
+<!--            renderStocks([], favoriteListContainer, true); // Render empty state explicitly-->
+<!--            return;-->
+<!--        }-->
+<!--        favoriteListContainer.innerHTML = `<div class="message">Loading favorite stocks...</div>`;-->
+<!--        fetchStockData(favorites, (data, error) => {-->
+<!--            renderStocks(data, favoriteListContainer, true, error);-->
+<!--        });-->
+<!--    }-->
+
+<!--    // -&#45;&#45; Event Listeners -&#45;&#45;-->
+<!--    favoriteForm.addEventListener("submit", (e) => {-->
+<!--        e.preventDefault();-->
+<!--        addFavorite(favoriteInput.value);-->
+<!--    });-->
+
+<!--    closeOverlayBtn.addEventListener("click", () => {-->
+<!--        overlay.classList.remove("active");-->
+<!--        if (chartInstance) { chartInstance.destroy(); chartInstance = null; }-->
+<!--    });-->
+
+<!--    overlay.addEventListener('click', (e) => {-->
+<!--        if (e.target === overlay) { closeOverlayBtn.click(); }-->
+<!--    });-->
+
+<!--    toggleThemeBtn.addEventListener('click', () => {-->
+<!--        alert('Theme toggle functionality placeholder.');-->
+<!--        // Basic theme toggle example (add dark-mode class to body)-->
+<!--        // document.body.classList.toggle('dark-mode');-->
+<!--        // You would need corresponding .dark-mode CSS rules-->
+<!--    });-->
+
+<!--    showAnalysisBtn.addEventListener('click', () => {-->
+<!--        alert('Stock analytics placeholder.');-->
+<!--    });-->
+
+<!--    analyzeBtn.addEventListener('click', () => {-->
+<!--        alert('Stock strategy analysis placeholder.');-->
+<!--    });-->
+
+<!--    floatBtn.addEventListener('click', () => {-->
+<!--        // Scroll to the add favorite form and focus the input-->
+<!--        favoriteForm.scrollIntoView({ behavior: 'smooth', block: 'center' });-->
+<!--        favoriteInput.focus();-->
+<!--    });-->
+
+<!--    // Existing Navbar click handlers (potentially redundant)-->
+<!--    navItems.forEach(item => {-->
+<!--        item.addEventListener('click', function() {-->
+<!--            navItems.forEach(nav => nav.classList.remove('active'));-->
+<!--            this.classList.add('active');-->
+<!--            alert(`(Old Nav) Would navigate to ${this.textContent} tab`);-->
+<!--        });-->
+<!--    });-->
+
+<!--    // -&#45;&#45; Initial Load -&#45;&#45;-->
+<!--    document.addEventListener('DOMContentLoaded', () => { // Ensure DOM is ready-->
+<!--        loadTrending();-->
+<!--        loadFavorites();-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1809,14 +2528,13 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Updated styling to match the debt management UI */
         body {
             font-family: 'Roboto', sans-serif;
             background: #f0f2f5;
             margin: 0;
             padding: 0;
             color: #333;
-            padding-bottom: 90px; /* ADDED: Space for bottom navigation bar */
+            padding-bottom: 90px;
         }
         header {
             background: #2c3e50;
@@ -1826,7 +2544,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; /* Prevent header shrinking */
+            flex-shrink: 0;
         }
         header h1 {
             margin: 0;
@@ -1845,8 +2563,8 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            flex-grow: 1; /* Allow container to grow */
-            overflow-y: auto; /* Allow content scrolling if needed */
+            flex-grow: 1;
+            overflow-y: auto;
         }
         .section {
             background: #fff;
@@ -1877,17 +2595,16 @@
         .stock-info {
             display: flex;
             flex: 1;
-            min-width: 0; /* Prevent overflow issues */
-            align-items: center; /* Vertically align items */
+            min-width: 0;
+            align-items: center;
         }
         .stock-info span {
             flex: 1;
             padding: 0 5px;
-            white-space: nowrap; /* Prevent wrapping */
-            overflow: hidden; /* Hide overflow */
-            text-overflow: ellipsis; /* Add ellipsis */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        /* Give symbol slightly more space */
         .stock-info span:first-child {
             flex: 1.2;
         }
@@ -1899,9 +2616,8 @@
             border-radius: 4px;
             cursor: pointer;
             margin-left: 10px;
-            flex-shrink: 0; /* Prevent button from shrinking */
+            flex-shrink: 0;
         }
-        /* Form styling updated */
         form {
             display: flex;
             margin-bottom: 20px;
@@ -1924,7 +2640,6 @@
             font-size: 16px;
             margin-bottom: 10px;
         }
-        /* Action buttons */
         .action-btn {
             display: block;
             width: 100%;
@@ -1941,7 +2656,6 @@
         .primary-btn { background: #2ecc71; }
         .secondary-btn { background: #3498db; }
 
-        /* Existing Navbar - POTENTIALLY REDUNDANT */
         .navbar {
             display: flex;
             background: #fff;
@@ -1955,16 +2669,14 @@
             padding: 12px;
             cursor: pointer;
             background: #f0f2f5;
-            color: #333; /* Added text color */
-            transition: background-color 0.2s, color 0.2s; /* Added transition */
+            color: #333;
+            transition: background-color 0.2s, color 0.2s;
         }
         .nav-item.active {
             background: #3498db;
             color: white;
         }
-        /* End Existing Navbar */
 
-        /* Overlay styling */
         .overlay {
             position: fixed;
             top: 0;
@@ -1978,7 +2690,7 @@
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.3s, visibility 0.3s;
-            z-index: 1000; /* Above everything except maybe float button if needed */
+            z-index: 1000;
         }
         .overlay.active {
             visibility: visible;
@@ -2016,10 +2728,9 @@
         .action-buttons { display: flex; margin-top: 20px; gap: 10px; }
         .action-buttons button { flex: 1; }
 
-        /* Float button */
         .float-btn {
             position: fixed;
-            bottom: 80px; /* ADJUSTED: Position above nav bar */
+            bottom: 80px;
             right: 20px;
             background: #3498db;
             color: white;
@@ -2030,56 +2741,53 @@
             align-items: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             cursor: pointer;
-            z-index: 1001; /* ADJUSTED: Above overlay and nav bar */
+            z-index: 1001;
         }
         .float-btn span { margin-left: 8px; }
 
-        /* --- ADDED: Bottom Navigation Bar Styles --- */
         .nav-bar {
-            position: fixed; /* Fixed position at the bottom */
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: #fff; /* White background */
+            background: #fff;
             display: flex;
             justify-content: space-around;
             padding: 1rem 0;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.08); /* Shadow above the bar */
-            z-index: 999; /* Below overlay (1000) and float btn (1001) */
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
+            z-index: 999;
         }
         .nav-button {
-            text-decoration: none; /* Remove underline from links */
-            padding: 0.6rem 1rem; /* Adjust padding */
-            border-radius: 8px; /* Match existing style */
+            text-decoration: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
             cursor: pointer;
-            color: #7f8c8d; /* Default text color */
+            color: #7f8c8d;
             transition: all 0.2s;
-            font-size: 13px; /* Adjust font size */
+            font-size: 13px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex: 1; /* Allow buttons to take up space */
-            text-align: center; /* Center text */
-            min-width: 0; /* Prevent overflow on small screens */
+            flex: 1;
+            text-align: center;
+            min-width: 0;
         }
         .nav-button.active {
-            background: #3498db; /* Active button background */
-            color: white; /* Active button text color */
-            box-shadow: 0 4px 12px rgba(52,152,219,0.2); /* Optional shadow */
+            background: #3498db;
+            color: white;
+            box-shadow: 0 4px 12px rgba(52,152,219,0.2);
         }
-        /* --- End Bottom Navigation Bar Styles --- */
 
-        /* Responsive adjustments */
         @media (max-width: 600px) {
             header { padding: 15px; }
             header h1 { font-size: 20px; }
             .container { padding: 15px; }
             .stock-info span { font-size: 14px; }
             .delete-btn { padding: 4px 8px; font-size: 12px; }
-            .float-btn { bottom: 75px; padding: 10px 15px; font-size: 14px; } /* Adjust float btn */
-            .nav-button { padding: 0.5rem 0.5rem; font-size: 11px; } /* Adjust bottom nav */
-            body { padding-bottom: 80px; } /* Ensure padding for smaller nav */
+            .float-btn { bottom: 75px; padding: 10px 15px; font-size: 14px; }
+            .nav-button { padding: 0.5rem 0.5rem; font-size: 11px; }
+            body { padding-bottom: 80px; }
         }
 
     </style>
@@ -2110,7 +2818,8 @@
         <div class="nav-item">Analytics</div>
         <div class="nav-item">History</div>
     </div>
-</div> <button class="float-btn">
+</div>
+<button class="float-btn">
     +
     <span>Add Stock</span>
 </button>
@@ -2131,14 +2840,11 @@
     <a href="UserPage.html" class="nav-button">User Profile</a>
 </div>
 <script>
-    // --- Configuration ---
-    const apiKey = 'FUI5OGIATFMMMIHV'; // Your provided Alpha Vantage API key
-    // Note: Alpha Vantage free tier limitations apply.
+    const apiKey = 'N2LLNLUWOB3TCE3X'; // MAKE SURE THIS IS YOUR CORRECT, ACTIVE KEY
     let trendingSymbols = ["TCS.NS", "RELIANCE.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS"];
     let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     let chartInstance = null;
 
-    // --- DOM Elements ---
     const trendingListContainer = document.getElementById("trendingList");
     const favoriteListContainer = document.getElementById("favoriteList");
     const favoriteForm = document.getElementById("favoriteForm");
@@ -2146,88 +2852,106 @@
     const overlay = document.getElementById("overlay");
     const closeOverlayBtn = document.getElementById("closeOverlay");
     const stockDetailsContainer = document.getElementById("stockDetails");
-    const stockChartCanvas = document.getElementById("stockChart").getContext('2d'); // Get context directly
+    const stockChartCanvas = document.getElementById("stockChart").getContext('2d');
     const toggleThemeBtn = document.querySelector(".toggle-btn");
     const showAnalysisBtn = document.getElementById("showAnalysisBtn");
     const analyzeBtn = document.getElementById("analyzeBtn");
     const floatBtn = document.querySelector(".float-btn");
-    const navItems = document.querySelectorAll(".nav-item"); // Existing top nav items
+    const navItems = document.querySelectorAll(".nav-item");
 
-    // --- API Functions ---
     async function fetchStockData(symbols, callback) {
-        if (apiKey === 'YOUR_API_KEY' || !apiKey) { // Added check for empty key
+        if (apiKey === 'YOUR_API_KEY' || !apiKey) {
             console.error("API Key not set. Please replace 'YOUR_API_KEY'.");
             callback(null, "API Key not configured.");
             return;
         }
         if (!symbols || symbols.length === 0) {
-            callback([]); // Return empty array if no symbols
+            callback([]);
             return;
         }
 
-        const promises = symbols.map(async (symbol) => { // Added async here
-            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${symbol}`);
-                const data = await response.json();
+        const results = [];
+        let errorOccurred = false;
+        let lastErrorMessage = "An unknown error occurred while fetching data.";
 
-                // Check for API call frequency limit note
+        for (const symbol of symbols) {
+            const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+            let quoteData = null;
+
+            try {
+                console.log(`Workspaceing data for ${symbol}...`);
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} for ${symbol}`);
+                }
+
+                const data = await response.json();
+                console.log(`Raw response for ${symbol}:`, JSON.stringify(data).substring(0, 200) + '...');
+
                 if (data.Note) {
-                    console.warn(`API Note for ${symbol}: ${data.Note}`);
-                    // You might want to handle this, e.g., by delaying the next request
-                    await new Promise(resolve => setTimeout(resolve, 15000)); // Wait 15s if hitting limit
-                    // Retry fetch after delay
+                    console.warn(`API Note for ${symbol}: ${data.Note}. Waiting and retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, 15000));
+
                     const retryResponse = await fetch(url);
                     if (!retryResponse.ok) throw new Error(`HTTP error! status: ${retryResponse.status} for ${symbol} (after retry)`);
                     const retryData = await retryResponse.json();
-                    if (retryData.Note) { // Still hitting limit after retry
-                        throw new Error(`API rate limit hit for ${symbol} even after delay.`);
+                    console.log(`Raw response for ${symbol} (RETRY):`, JSON.stringify(retryData).substring(0, 200) + '...');
+
+                    if (retryData.Note) {
+                        throw new Error(`API rate limit still hit for ${symbol} after delay.`);
                     }
                     if (retryData['Error Message'] || !retryData['Global Quote'] || Object.keys(retryData['Global Quote']).length === 0) {
                         console.warn(`No data or error for symbol ${symbol} (after retry):`, retryData['Error Message'] || 'Empty quote');
-                        return null;
+                        lastErrorMessage = `Failed for ${symbol} after retry: ${retryData['Error Message'] || 'Empty quote or rate limit'}`;
+                    } else {
+                        quoteData = mapQuoteData(retryData['Global Quote']);
                     }
-                    const quote = retryData['Global Quote'];
-                    return mapQuoteData(quote); // Use helper function
                 }
-
-                if (data['Error Message'] || !data['Global Quote'] || Object.keys(data['Global Quote']).length === 0) {
+                else if (data['Error Message'] || !data['Global Quote'] || Object.keys(data['Global Quote']).length === 0) {
                     console.warn(`No data or error for symbol ${symbol}:`, data['Error Message'] || 'Empty quote');
-                    return null;
+                    lastErrorMessage = `Failed for ${symbol}: ${data['Error Message'] || 'Empty quote or invalid symbol/key'}`;
                 }
-                const quote = data['Global Quote'];
-                return mapQuoteData(quote); // Use helper function
+                else {
+                    quoteData = mapQuoteData(data['Global Quote']);
+                }
 
             } catch (error) {
-                console.error(`Failed to fetch data for ${symbol}:`, error);
-                return null;
+                console.error(`Failed to fetch or process data for ${symbol}:`, error);
+                errorOccurred = true;
+                lastErrorMessage = error.message || `Network or processing error for ${symbol}.`;
             }
-        });
 
-        try {
-            const results = await Promise.all(promises);
-            const validResults = results.filter(result => result !== null);
-            if (validResults.length === 0 && symbols.length > 0) {
-                callback(null, "Failed to fetch data. Check API key, symbol format (e.g., TCS.NS), or rate limits.");
+            if (quoteData) {
+                results.push(quoteData);
             } else {
-                callback(validResults);
+                errorOccurred = true;
             }
-        } catch (error) {
-            console.error("Error processing stock data fetches:", error);
-            callback(null, "An error occurred while fetching data.");
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+
+        if (results.length === 0 && symbols.length > 0) {
+            console.error("All fetch attempts failed. Last error:", lastErrorMessage);
+            callback(null, `Failed to fetch data. Last error: ${lastErrorMessage}. Check API key, symbol format (e.g., TCS.NS), or rate limits.`);
+        } else if (errorOccurred) {
+            console.warn("Some symbols failed to fetch. Displaying partial data.");
+            callback(results);
+        }
+        else {
+            callback(results);
         }
     }
 
-    // Helper function to map Alpha Vantage quote data
     function mapQuoteData(quote) {
         return {
             symbol: quote['01. symbol'],
-            longName: quote['01. symbol'], // Placeholder
+            longName: quote['01. symbol'],
             regularMarketPrice: parseFloat(quote['05. price']),
             regularMarketChange: parseFloat(quote['09. change']),
-            regularMarketChangePercent: parseFloat(quote['10. change percent']?.replace('%', '') || '0'), // Safer parsing
-            currency: 'INR' // Assumption
+            regularMarketChangePercent: parseFloat(quote['10. change percent']?.replace('%', '') || '0'),
+            currency: 'INR'
         };
     }
 
@@ -2237,7 +2961,6 @@
             callback(null, "API Key not configured.");
             return;
         }
-        // Use compact for fewer data points (suitable for free tier)
         const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=compact&apikey=${apiKey}`;
 
         fetch(url)
@@ -2246,7 +2969,7 @@
                 return res.json();
             })
             .then(data => {
-                if (data.Note) { // Handle API limit note
+                if (data.Note) {
                     console.warn(`API Note for ${symbol} (Historical): ${data.Note}`);
                     throw new Error("API rate limit likely hit fetching historical data.");
                 }
@@ -2254,7 +2977,7 @@
                     throw new Error(data['Error Message'] || `Invalid historical data format for ${symbol}.`);
                 }
                 const timeSeries = data['Time Series (Daily)'];
-                const timestamps = Object.keys(timeSeries).sort().slice(-30); // Get last ~30 days
+                const timestamps = Object.keys(timeSeries).sort().slice(-30);
                 if (timestamps.length === 0) {
                     throw new Error(`No valid timestamps found in historical data for ${symbol}.`);
                 }
@@ -2262,7 +2985,7 @@
                 const prices = timestamps.map(date => parseFloat(timeSeries[date]['4. close']));
                 const labels = timestamps.map(date => {
                     const [year, month, day] = date.split('-');
-                    return `${day}/${month}`; // Format DD/MM
+                    return `${day}/${month}`;
                 });
 
                 callback({ labels, prices });
@@ -2273,9 +2996,8 @@
             });
     }
 
-    // --- Rendering Functions ---
     function renderStocks(list, container, isFavorite = false, errorMessage = null) {
-        container.innerHTML = ""; // Clear previous content
+        container.innerHTML = "";
 
         if (errorMessage) {
             container.innerHTML = `<div class="message">${errorMessage}</div>`;
@@ -2308,7 +3030,6 @@
 
             const stockInfo = document.createElement("div");
             stockInfo.className = "stock-info";
-            // Ensure spans are created correctly
             stockInfo.innerHTML = `
                 <span title="${stock.symbol}">${stock.symbol}</span>
                 <span title="Price: ${price} ${currency}">${price} ${currency}</span>
@@ -2342,7 +3063,7 @@
         }
         overlay.classList.add("active");
 
-        fetchStockData([symbol], (data, error) => { // Fetch fresh data for the overlay
+        fetchStockData([symbol], (data, error) => {
             if (error || !data || data.length === 0) {
                 stockDetailsContainer.innerHTML = `<div class="message">Failed to load details for ${symbol}. ${error || 'No data found.'}</div>`;
                 return;
@@ -2377,12 +3098,12 @@
                     return;
                 }
 
-                if(chartLoadingMsg) chartLoadingMsg.style.display = 'none'; // Hide loading message
+                if(chartLoadingMsg) chartLoadingMsg.style.display = 'none';
 
-                if (chartInstance) { chartInstance.destroy(); } // Destroy previous before creating new
+                if (chartInstance) { chartInstance.destroy(); }
 
-                try { // Add try-catch for chart creation
-                    chartInstance = new Chart(stockChartCanvas, { // Use the context obtained earlier
+                try {
+                    chartInstance = new Chart(stockChartCanvas, {
                         type: "line",
                         data: {
                             labels: histData.labels,
@@ -2393,16 +3114,16 @@
                                 backgroundColor: "rgba(52, 152, 219, 0.1)",
                                 fill: true,
                                 tension: 0.1,
-                                pointRadius: 2, // Smaller points
+                                pointRadius: 2,
                                 pointHoverRadius: 4
                             }]
                         },
                         options: {
                             responsive: true,
-                            maintainAspectRatio: true, // Maintain aspect ratio can be better
+                            maintainAspectRatio: true,
                             plugins: {
                                 title: { display: true, text: `Recent Performance` },
-                                legend: { display: false } // Hide legend if only one dataset
+                                legend: { display: false }
                             },
                             scales: { y: { beginAtZero: false } }
                         }
@@ -2418,22 +3139,20 @@
         });
     }
 
-    // --- Favorite Management ---
     function addFavorite(symbol) {
-        // Basic validation for NSE symbols (e.g., ends with .NS)
         const upperSymbol = symbol.trim().toUpperCase();
-        if (!upperSymbol) return; // Ignore empty input
+        if (!upperSymbol) return;
 
         if (!upperSymbol.endsWith(".NS")) {
             alert("Please enter a valid NSE symbol ending with '.NS' (e.g., TCS.NS)");
-            favoriteInput.focus(); // Keep focus on input
+            favoriteInput.focus();
             return;
         }
 
         if (!favorites.includes(upperSymbol)) {
             favorites.push(upperSymbol);
             localStorage.setItem("favorites", JSON.stringify(favorites));
-            loadFavorites(); // Refresh the list
+            loadFavorites();
         } else {
             alert(`${upperSymbol} is already in favorites.`);
         }
@@ -2446,10 +3165,8 @@
         loadFavorites();
     }
 
-    // --- Initial Load Functions ---
     function loadTrending() {
         trendingListContainer.innerHTML = `<div class="message">Loading trending stocks...</div>`;
-        // Use a smaller set for trending to reduce API calls if needed
         fetchStockData(trendingSymbols.slice(0, 5), (data, error) => {
             renderStocks(data, trendingListContainer, false, error);
         });
@@ -2457,7 +3174,7 @@
 
     function loadFavorites() {
         if (favorites.length === 0) {
-            renderStocks([], favoriteListContainer, true); // Render empty state explicitly
+            renderStocks([], favoriteListContainer, true);
             return;
         }
         favoriteListContainer.innerHTML = `<div class="message">Loading favorite stocks...</div>`;
@@ -2466,7 +3183,6 @@
         });
     }
 
-    // --- Event Listeners ---
     favoriteForm.addEventListener("submit", (e) => {
         e.preventDefault();
         addFavorite(favoriteInput.value);
@@ -2483,9 +3199,6 @@
 
     toggleThemeBtn.addEventListener('click', () => {
         alert('Theme toggle functionality placeholder.');
-        // Basic theme toggle example (add dark-mode class to body)
-        // document.body.classList.toggle('dark-mode');
-        // You would need corresponding .dark-mode CSS rules
     });
 
     showAnalysisBtn.addEventListener('click', () => {
@@ -2497,12 +3210,10 @@
     });
 
     floatBtn.addEventListener('click', () => {
-        // Scroll to the add favorite form and focus the input
         favoriteForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         favoriteInput.focus();
     });
 
-    // Existing Navbar click handlers (potentially redundant)
     navItems.forEach(item => {
         item.addEventListener('click', function() {
             navItems.forEach(nav => nav.classList.remove('active'));
@@ -2511,8 +3222,7 @@
         });
     });
 
-    // --- Initial Load ---
-    document.addEventListener('DOMContentLoaded', () => { // Ensure DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
         loadTrending();
         loadFavorites();
     });
